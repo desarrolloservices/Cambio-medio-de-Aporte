@@ -30,6 +30,8 @@ import {
   createTheme,
   ThemeProvider,
 } from "@mui/material";
+import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs'
 
 
 // Create a new theme using Nunito Sans
@@ -112,6 +114,7 @@ function App() {
 
   return (
     <ThemeProvider theme={theme}>
+      <LocalizationProvider dateAdapter={AdapterDayjs}>
     <div className="App">
       <Container>
         <Grid container mt={5}>
@@ -127,7 +130,8 @@ function App() {
         <Stepper
               activeStep={activeStep}
               alternativeLabel
-              sx={{ marginTop: "40px" }}
+              sx={{ marginTop: "40px",marginBottom: "40px"}}
+              
             >
               <Step>
                 <StepLabel>Datos del Solicitante</StepLabel>
@@ -143,10 +147,10 @@ function App() {
               </Step>
             </Stepper>
             {
-              activeStep === 0 && <><Typography variant='h6' color={'gray'} mt={4}>Paso 1</Typography>
-   <form onSubmit={handleSubmit}>
+              activeStep === 0 && <>
+   <form onSubmit={handleSubmit} >
         <Grid container spacing={2}>
-          <Grid item xs={12} sm={6}>
+          <Grid item xs={12} sm={3}>
             <TextField
               name="primerNombre"
               label="Primer Nombre"
@@ -155,7 +159,7 @@ function App() {
               fullWidth
             />
           </Grid>
-          <Grid item xs={12} sm={6}>
+          <Grid item xs={12} sm={3}>
             <TextField
               name="segundoNombre"
               label="Segundo Nombre"
@@ -164,7 +168,7 @@ function App() {
               fullWidth
             />
           </Grid>
-          <Grid item xs={12} sm={6}>
+          <Grid item xs={12} sm={3}>
             <TextField
               name="primerApellido"
               label="Primer Apellido"
@@ -173,7 +177,7 @@ function App() {
               fullWidth
             />
           </Grid>
-          <Grid item xs={12} sm={6}>
+          <Grid item xs={12} sm={3}>
             <TextField
               name="segundoApellido"
               label="Segundo Apellido"
@@ -219,26 +223,24 @@ function App() {
             />
           </Grid>
           <Grid item xs={12} sm={6}>
-            <FormControl fullWidth>
-              <InputLabel>Género</InputLabel>
-              <Select
-                name="genero"
-                value={formData.genero}
-                onChange={handleInputChange}
-              >
-                <MenuItem value="M">M</MenuItem>
-                <MenuItem value="F">F</MenuItem>
-              </Select>
+            <FormControl fullWidth sx={{display:'flex',flexDirection:'row',justifyContent:'center'}}>
+            
+            <ButtonGroup variant="outlined" aria-label="outlined primary button group" >
+  <Button  value={formData.genero}
+                onChange={handleInputChange}>F</Button>
+  <Button  value={formData.genero}
+                onChange={handleInputChange}>M</Button>
+</ButtonGroup>
+              
+                
+               
+            
             </FormControl>
           </Grid>
           <Grid item xs={12} sm={6}>
-            {/* <DatePicker
-              name="fechaNacimiento"
-              label="Fecha de Nacimiento"
-              value={formData.fechaNacimiento}
-              onChange={handleDateChange}
-              fullWidth
-            /> */}
+            <FormControl fullWidth >
+          <DatePicker/>
+          </FormControl>
           </Grid>
           <Grid item xs={12} sm={6}>
             <TextField
@@ -337,21 +339,20 @@ function App() {
             </FormControl>
           </Grid>
           <Grid item xs={12}>
-            <Button type="submit" variant="contained" color="primary">
-              Submit
-            </Button>
+          <Button onClick={handleNext}>Siguiente</Button>
           </Grid>
+          
         </Grid>
       </form>
 
 
- 
+      
 
 
 
    
 
-                               <Button onClick={handleNext}>Siguiente</Button></>
+                              </>
             }
              {
               activeStep === 1 && <><Typography variant='h6' color={'gray'} mt={4}>Paso 2</Typography> <Button onClick={handleBack}>Regresar</Button><Button onClick={handleNext}>Siguiente</Button></>
@@ -364,6 +365,7 @@ function App() {
             }
       </Container>
     </div>
+    </LocalizationProvider>
     </ThemeProvider>
   );
 }
