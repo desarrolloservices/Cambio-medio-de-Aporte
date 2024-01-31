@@ -186,7 +186,22 @@ function App() {
               fullWidth
             />
           </Grid>
-          <Grid item xs={12} sm={6}>
+          <Grid item xs={12} sm={2}>
+            <FormControl fullWidth sx={{display:'flex',flexDirection:'row',justifyContent:'center'}}>
+            
+            <ButtonGroup variant="outlined" aria-label="outlined primary button group" >
+  <Button  value={formData.genero}
+                onChange={handleInputChange}>F</Button>
+  <Button  value={formData.genero}
+                onChange={handleInputChange}>M</Button>
+</ButtonGroup>
+              
+                
+               
+            
+            </FormControl>
+          </Grid>
+          <Grid item xs={12} sm={4}>
             <TextField
               name="tipoIdentificacion"
               label="Tipo de Identificación"
@@ -222,21 +237,7 @@ function App() {
               fullWidth
             />
           </Grid>
-          <Grid item xs={12} sm={6}>
-            <FormControl fullWidth sx={{display:'flex',flexDirection:'row',justifyContent:'center'}}>
-            
-            <ButtonGroup variant="outlined" aria-label="outlined primary button group" >
-  <Button  value={formData.genero}
-                onChange={handleInputChange}>F</Button>
-  <Button  value={formData.genero}
-                onChange={handleInputChange}>M</Button>
-</ButtonGroup>
-              
-                
-               
-            
-            </FormControl>
-          </Grid>
+         
           <Grid item xs={12} sm={6}>
             <FormControl fullWidth >
           <DatePicker/>
