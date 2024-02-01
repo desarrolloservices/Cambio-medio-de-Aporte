@@ -14,6 +14,7 @@ import {
 import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { FormContext } from "../Context/FormContext"; // Import the FormContext
+import Navegador from "./Navegador";
 
 interface Props {
   // Propiedades del componente
@@ -220,9 +221,7 @@ const Form1: React.FC<Props> = (props) => {
             fullWidth
           />
         </Grid>
-        <Grid item xs={12}>
-          <Button onClick={handleNext}>Siguiente</Button>
-        </Grid>
+        <Navegador />
       </Grid>
     </form>
   );

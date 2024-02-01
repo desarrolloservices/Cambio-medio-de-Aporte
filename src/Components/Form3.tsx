@@ -11,7 +11,9 @@ import {
 } from "@mui/material";
 import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { FormContext } from "../Context/FormContext"; // Import the FormContext
+import Navegador from "./Navegador";
 
 interface Props {
   // Propiedades del componente
@@ -22,213 +24,28 @@ const Form3: React.FC<Props> = (props) => {
   const { formData, handleInputChange, handleNext, handleBack, activeStep } =
     useContext(FormContext); // Use the FormContext
 
-  return (
-    <form>
-      <Grid container spacing={2}>
-        <Grid item xs={12} sm={3}>
-          <TextField
-            name="primerNombre"
-            label="Primer Nombre"
-            value={formData.primerNombre}
-            onChange={handleInputChange}
-            fullWidth
-          />
-        </Grid>
-        <Grid item xs={12} sm={3}>
-          <TextField
-            name="segundoNombre"
-            label="Segundo Nombre"
-            value={formData.segundoNombre}
-            onChange={handleInputChange}
-            fullWidth
-          />
-        </Grid>
-        <Grid item xs={12} sm={3}>
-          <TextField
-            name="primerApellido"
-            label="Primer Apellido"
-            value={formData.primerApellido}
-            onChange={handleInputChange}
-            fullWidth
-          />
-        </Grid>
-        <Grid item xs={12} sm={3}>
-          <TextField
-            name="segundoApellido"
-            label="Segundo Apellido"
-            value={formData.segundoApellido}
-            onChange={handleInputChange}
-            fullWidth
-          />
-        </Grid>
-        <Grid item xs={12} sm={2}>
-          <FormControl
-            fullWidth
-            sx={{
-              display: "flex",
-              flexDirection: "row",
-              justifyContent: "center",
-            }}
-          >
-            <ButtonGroup
-              variant="outlined"
-              aria-label="outlined primary button group"
-            >
-              <Button value={formData.genero} onClick={() => handleInputChange}>
-                F
-              </Button>
-              <Button
-                value={formData.genero}
-                onChange={() => handleInputChange}
-              >
-                M
-              </Button>
-            </ButtonGroup>
-          </FormControl>
-        </Grid>
-        <Grid item xs={12} sm={2}>
-          <FormControl fullWidth>
-            <DatePicker />
-          </FormControl>
-        </Grid>
-        <Grid item xs={12} sm={3}>
-          <TextField
-            name="tipoIdentificacion"
-            label="Tipo de Identificación"
-            value={formData.tipoIdentificacion}
-            onChange={handleInputChange}
-            fullWidth
-          />
-        </Grid>
-        <Grid item xs={12} sm={5}>
-          <TextField
-            name="numeroIdentificacion"
-            label="N° de Identificación"
-            value={formData.numeroIdentificacion}
-            onChange={handleInputChange}
-            fullWidth
-          />
-        </Grid>
-        <Grid item xs={12} sm={6}>
-          <TextField
-            name="nacionalidad1"
-            label="Nacionalidad 1"
-            value={formData.nacionalidad1}
-            onChange={handleInputChange}
-            fullWidth
-          />
-        </Grid>
-        <Grid item xs={12} sm={6}>
-          <TextField
-            name="nacionalidad2"
-            label="Nacionalidad 2"
-            value={formData.nacionalidad2}
-            onChange={handleInputChange}
-            fullWidth
-          />
-        </Grid>
+  const columns: GridColDef[] = [
+    { field: "id", headerName: "No", width: 100 },
+    { field: "firstName1", headerName: "1er. Nombre 1", width: 150 },
+    { field: "firstName2", headerName: "2do. Nombre", width: 150 },
+    { field: "lastName1", headerName: "1er. Apellido", width: 150 },
+    { field: "lastName2", headerName: "2do. Apellido", width: 150 },
+    { field: "relationship", headerName: "Parentesco", width: 150 },
+    { field: "identificationNo", headerName: "No de Identificación", width: 200 },
+    { field: "birthdate", headerName: "Fecha de Nacimiento", width: 200 },
+    { field: "percentage", headerName: "%", width: 100 },
+  ];
 
-        <Grid item xs={12} sm={6}>
-          <TextField
-            name="correoElectronico"
-            label="Correo Electrónico"
-            value={formData.correoElectronico}
-            onChange={handleInputChange}
-            fullWidth
-          />
-        </Grid>
-        <Grid item xs={12} sm={6}>
-          <FormControl fullWidth>
-            <InputLabel>Nivel de Escolaridad</InputLabel>
-            <Select
-              name="nivelEscolaridad"
-              value={formData.nivelEscolaridad}
-              onChange={() => handleInputChange}
-            >
-              <MenuItem value="Primaria">Primaria</MenuItem>
-              <MenuItem value="Secundaria">Secundaria</MenuItem>
-              <MenuItem value="Universidad">Universidad</MenuItem>
-            </Select>
-          </FormControl>
-        </Grid>
-        <Grid item xs={12} sm={6}>
-          <FormControl fullWidth>
-            <InputLabel>Profesión</InputLabel>
-            <Select
-              name="profesion"
-              value={formData.profesion}
-              onChange={() => handleInputChange}
-            >
-              <MenuItem value="Ingeniero">Ingeniero</MenuItem>
-              <MenuItem value="Médico">Médico</MenuItem>
-              <MenuItem value="Abogado">Abogado</MenuItem>
-            </Select>
-          </FormControl>
-        </Grid>
-        <Grid item xs={12} sm={6}>
-          <TextField
-            name="ocupacion"
-            label="Ocupación"
-            value={formData.ocupacion}
-            onChange={handleInputChange}
-            fullWidth
-          />
-        </Grid>
-        <Grid item xs={12} sm={6}>
-          <TextField
-            name="telefonoFijo"
-            label="Teléfono Fijo"
-            value={formData.telefonoFijo}
-            onChange={handleInputChange}
-            fullWidth
-          />
-        </Grid>
-        <Grid item xs={12} sm={6}>
-          <TextField
-            name="celular"
-            label="Celular"
-            value={formData.celular}
-            onChange={handleInputChange}
-            fullWidth
-          />
-        </Grid>
-        <Grid item xs={12} sm={6}>
-          <TextField
-            name="direccionResidencia"
-            label="Dirección de Residencia"
-            value={formData.direccionResidencia}
-            onChange={handleInputChange}
-            fullWidth
-          />
-        </Grid>
-        <Grid item xs={12} sm={6}>
-          <TextField
-            name="municipio"
-            label="Municipio"
-            value={formData.municipio}
-            onChange={handleInputChange}
-            fullWidth
-          />
-        </Grid>
-        <Grid item xs={12} sm={6}>
-          <FormControl fullWidth>
-            <InputLabel>Departamento</InputLabel>
-            <Select
-              name="departamento"
-              value={formData.departamento}
-              onChange={() => handleInputChange}
-            >
-              <MenuItem value="Departamento 1">Departamento 1</MenuItem>
-              <MenuItem value="Departamento 2">Departamento 2</MenuItem>
-              <MenuItem value="Departamento 3">Departamento 3</MenuItem>
-            </Select>
-          </FormControl>
-        </Grid>
-        <Grid item xs={12}>
-          <Button onClick={handleNext}>Siguiente</Button>
-        </Grid>
-      </Grid>
-    </form>
+  const rows = [
+    { id: 1, firstName1: "John", firstName2: "Doe", lastName1: "Smith", lastName2: "Johnson", relationship: "Spouse", identificationNo: "123456789", birthdate: "1990-01-01", percentage: "50%" },
+    { id: 2, firstName1: "Jane", firstName2: "Doe", lastName1: "Smith", lastName2: "Johnson", relationship: "Child", identificationNo: "987654321", birthdate: "1995-05-05", percentage: "25%" },
+  ];
+
+  return (
+    <div>
+      <DataGrid rows={rows} columns={columns} autoHeight autoPageSize  />
+      <Navegador />
+    </div>
   );
 };
 
