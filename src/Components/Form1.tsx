@@ -29,16 +29,16 @@ const Form1: React.FC<Props> = (props) => {
   return (
     <form>
       <Grid container spacing={2} rowSpacing={4}>
-        <Grid item xs={12} sm={3}>
+        <Grid item xs={12} sm={12}>
           <TextField
             name="primerNombre"
-            label="Primer Nombre"
+            label="Nombre Completo"
             value={formData.primerNombre}
             onChange={handleInputChange}
             fullWidth
           />
         </Grid>
-        <Grid item xs={12} sm={3}>
+        {/* <Grid item xs={12} sm={3}>
           <TextField
             name="segundoNombre"
             label="Segundo Nombre"
@@ -64,7 +64,7 @@ const Form1: React.FC<Props> = (props) => {
             onChange={handleInputChange}
             fullWidth
           />
-        </Grid>
+        </Grid> */}
         <Grid item xs={12}  >
           <FormControl
             fullWidth

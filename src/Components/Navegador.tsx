@@ -12,16 +12,25 @@ const Navegador: React.FC<Props> = () => {
     const {handleBack,handleNext,activeStep} = useContext(FormContext);
 
     return (
-        <Grid container mt={5}>
+        <Grid container mt={5} mb={5}>
             {
-                activeStep === 0 ? null : <Grid item xs={6}>
-                <Button onClick={handleBack}>Regresar</Button>
-              </Grid >
+                activeStep === 0 ? <Grid item xs={12}>
+                <Button onClick={handleNext} variant='outlined'>Siguiente</Button>
+                </Grid> : null
             }
             {
-                activeStep === 3 ? null : <Grid item xs={6}>
-            <Button onClick={handleNext}>Siguiente</Button>
-            </Grid>
+                activeStep >= 1 && activeStep < 3 ? <><Grid item xs={6}>
+                <Button onClick={handleBack} variant='outlined'>Regresar</Button>
+                </Grid>
+                <Grid item xs={6}>
+                <Button onClick={handleNext} variant='outlined'>Siguiente</Button>
+                </Grid>
+                </> : null
+            }
+            {
+                activeStep === 3 ? <Grid item xs={12}>
+                <Button onClick={handleBack} variant='outlined'>Regresar</Button>
+                </Grid> : null
             }
         
             

@@ -78,7 +78,8 @@ const Form4: React.FC<Props> = (props) => {
             // onChange={handleInputChange}
           />
         </Grid>
-        <Grid item xs={12}>
+        <Grid item xs={6}>
+          <FormControl fullWidth>
           <LocalizationProvider dateAdapter={AdapterDayjs}>
             <DatePicker
               label="Fecha de Primer Aporte"
@@ -87,8 +88,10 @@ const Form4: React.FC<Props> = (props) => {
               // renderInput={(params) => <TextField {...params} />}
             />
           </LocalizationProvider>
+           </FormControl>
         </Grid>
-        <Grid item xs={12}>
+        <Grid item xs={6}>
+        <FormControl fullWidth>
           <LocalizationProvider dateAdapter={AdapterDayjs}>
             <DatePicker
               label="Fecha de Aportes Mensuales"
@@ -97,6 +100,7 @@ const Form4: React.FC<Props> = (props) => {
               // renderInput={(params) => <TextField {...params} />}
             />
           </LocalizationProvider>
+          </FormControl>
         </Grid>
         <Grid item xs={12}>
           <TextField
