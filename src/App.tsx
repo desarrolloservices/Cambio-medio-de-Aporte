@@ -111,7 +111,7 @@ const AppContent: React.FC = () => {
               mt={4}
             >
               <Typography variant="h5" color={"gray"}>
-                Formulario de Afiliación Simplificada
+               Starter FORM
               </Typography>
             </Grid>
           </Grid>
@@ -121,16 +121,16 @@ const AppContent: React.FC = () => {
             sx={{ marginTop: "40px", marginBottom: "40px" }}
           >
             <Step>
-              <StepLabel>Datos del Solicitante</StepLabel>
+              <StepLabel>Samples 1</StepLabel>
             </Step>
             <Step>
-              <StepLabel>Información Laboral</StepLabel>
+              <StepLabel>Samples 2</StepLabel>
             </Step>
             <Step>
-              <StepLabel>Beneficiarios Directos</StepLabel>
+              <StepLabel>Samples 3</StepLabel>
             </Step>
             <Step>
-              <StepLabel>Aportaciones</StepLabel>
+              <StepLabel>Samples 4</StepLabel>
             </Step>
           </Stepper>
           {activeStep === 0 && <Form1 />}
