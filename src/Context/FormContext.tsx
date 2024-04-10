@@ -27,6 +27,10 @@ export interface FormData {
   ingresosMensuales: number;
   centroTrabajo: string;
   actividadEconomica: string;
+  cardnumber: string;
+  formaPago: string;
+  diaDebito: string;
+  expiryDate: string;
 }
 
 export interface FormContextProps {
@@ -74,6 +78,10 @@ const FormProvider: React.FC<{ children: React.ReactNode }> = ({
     ingresosMensuales: 0,
     centroTrabajo: "",
     actividadEconomica: "",
+    cardnumber:"",
+    formaPago:"",
+    diaDebito:"",
+    expiryDate:""
   });
 
   const handleInputChange = (event: any) => {
@@ -88,7 +96,7 @@ const FormProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const handleSelectChange = (event: SelectChangeEvent) => {
     
- 
+    console.log(event.target.value);
     const { name, value } = event.target;
     setFormData((prevFormData) => ({
       ...prevFormData,

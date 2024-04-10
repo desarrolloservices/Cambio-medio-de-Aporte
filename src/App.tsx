@@ -116,9 +116,17 @@ const AppContent: React.FC = () => {
               </Typography>
               
             </Grid>
+            <Grid item xs={12} mb={3}>
+            <Typography variant="h5" color={theme.palette.secondary.main} >
+           Estimado(a): <strong>DEMO</strong>
+              </Typography>
+            </Grid>
             <Grid item xs={12}>
-            <Typography variant="body1" color={theme.palette.secondary.main}>
-            Incrementa tu aporte mensual y para tu comodidad, afílialo a un medio automático con tarjeta de crédito o débito. 
+            <Typography variant="body1" color={theme.palette.secondary.main} > 
+            Incrementa tu aporte mensual y para tu comodidad, afílialo a un medio automático con tarjeta de crédito o débito.
+              </Typography>
+              <Typography variant="body1" color={theme.palette.secondary.main} > 
+          Este formulario estará disponible para las próximas 48 horas.
               </Typography>
             </Grid>
           </Grid>
