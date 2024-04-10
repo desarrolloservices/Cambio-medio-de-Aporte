@@ -3,6 +3,7 @@ import React, { createContext, useState } from "react";
 
 // Definir el tipo de los datos del formulario
 export interface FormData {
+  aporte: number;
   primerNombre: string;
   segundoNombre: string;
   primerApellido: string;
@@ -49,6 +50,7 @@ const FormProvider: React.FC<{ children: React.ReactNode }> = ({
 }) => {
   const [activeStep, setActiveStep] = useState(0);
   const [formData, setFormData] = useState({
+    aporte:0,
     primerNombre: "",
     segundoNombre: "",
     primerApellido: "",

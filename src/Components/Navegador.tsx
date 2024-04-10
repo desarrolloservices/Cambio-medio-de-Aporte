@@ -19,7 +19,7 @@ const Navegador: React.FC<Props> = () => {
                 </Grid> : null
             }
             {
-                activeStep >= 1 && activeStep < 3 ? <><Grid item xs={6}>
+                activeStep >= 1 && activeStep < 2 ? <><Grid item xs={6}>
                 <Button onClick={handleBack} variant='outlined'>Regresar</Button>
                 </Grid>
                 <Grid item xs={6}>
@@ -28,7 +28,7 @@ const Navegador: React.FC<Props> = () => {
                 </> : null
             }
             {
-                activeStep === 3 ? <Grid item xs={12}>
+                activeStep === 2 ? <Grid item xs={12}>
                 <Button onClick={handleBack} variant='outlined'>Regresar</Button>
                 </Grid> : null
             }

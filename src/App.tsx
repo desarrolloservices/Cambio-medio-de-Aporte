@@ -109,9 +109,16 @@ const AppContent: React.FC = () => {
                 flexDirection: "row",
               }}
               mt={4}
+              mb={2}
             >
-              <Typography variant="h5" color={"gray"}>
-               Starter FORM
+              <Typography variant="h4" color={theme.palette.primary.main}>
+              Aumenta tu ahorro y alcanza tus metas!
+              </Typography>
+              
+            </Grid>
+            <Grid item xs={12}>
+            <Typography variant="body1" color={theme.palette.secondary.main}>
+            Incrementa tu aporte mensual y para tu comodidad, afílialo a un medio automático con tarjeta de crédito o débito. 
               </Typography>
             </Grid>
           </Grid>
@@ -121,16 +128,13 @@ const AppContent: React.FC = () => {
             sx={{ marginTop: "40px", marginBottom: "40px" }}
           >
             <Step>
-              <StepLabel>Samples 1</StepLabel>
+              <StepLabel>Ingresa tus datos</StepLabel>
             </Step>
             <Step>
-              <StepLabel>Samples 2</StepLabel>
-            </Step>
+              <StepLabel>Valida tus datos</StepLabel>
+              </Step>
             <Step>
-              <StepLabel>Samples 3</StepLabel>
-            </Step>
-            <Step>
-              <StepLabel>Samples 4</StepLabel>
+              <StepLabel>Confirmar</StepLabel>
             </Step>
           </Stepper>
           {activeStep === 0 && <Form1 />}
@@ -140,9 +144,8 @@ const AppContent: React.FC = () => {
           {activeStep === 2 && (
             <Form3 />
           )}
-          {activeStep === 3 && (
-            <Form4/>
-          )}
+         
+         
         </Container>
       </div>
     </div>
