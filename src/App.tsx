@@ -94,6 +94,7 @@ const AppContent: React.FC = () => {
                 alignItems: "center",
                 display: "flex",
                 flexDirection: "row",
+                marginBottom: "40px",
               }}
             >
               <img src={logo} alt="Logo" style={{ height: "70px" }} />
@@ -108,7 +109,7 @@ const AppContent: React.FC = () => {
                 display: "flex",
                 flexDirection: "row",
               }}
-              mt={4}
+              mt={2}
               mb={2}
             >
               <Typography variant="h4" color={theme.palette.primary.main}>
@@ -121,7 +122,7 @@ const AppContent: React.FC = () => {
            Estimado(a): <strong>DEMO</strong>
               </Typography>
             </Grid>
-            <Grid item xs={12}>
+            <Grid item xs={12} mb={3}>
             <Typography variant="body1" color={theme.palette.secondary.main} > 
             Incrementa tu aporte mensual y para tu comodidad, afílialo a un medio automático con tarjeta de crédito o débito.
               </Typography>
@@ -130,7 +131,7 @@ const AppContent: React.FC = () => {
               </Typography>
             </Grid>
           </Grid>
-          <Stepper
+          {/* <Stepper
             activeStep={activeStep}
             alternativeLabel
             sx={{ marginTop: "40px", marginBottom: "40px" }}
@@ -144,14 +145,15 @@ const AppContent: React.FC = () => {
             <Step>
               <StepLabel>Confirmar</StepLabel>
             </Step>
-          </Stepper>
-          {activeStep === 0 && <Form1 />}
+          </Stepper> */}
+          <Form1 />
+          {/* {activeStep === 0 && <Form1 />}
           {activeStep === 1 && (
              <Form2 />
           )}
           {activeStep === 2 && (
             <Form3 />
-          )}
+          )} */}
          
          
         </Container>

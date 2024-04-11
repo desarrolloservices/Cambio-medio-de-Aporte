@@ -15,7 +15,7 @@ const Navegador: React.FC<Props> = () => {
         <Grid container mt={5} mb={5}>
             {
                 activeStep === 0 ? <Grid item xs={12}>
-                <Button onClick={handleNext} variant='outlined'>Siguiente</Button>
+                <Button onClick={handleNext} variant='outlined'>Solicitar</Button>
                 </Grid> : null
             }
             {

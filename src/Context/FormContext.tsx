@@ -32,7 +32,8 @@ export interface FormData {
   diaDebito: string;
   expiryDate: string;
   tieneSeguro: boolean;
-  prima:number
+  prima: number;
+  cuenta: string;
 }
 
 export interface FormContextProps {
@@ -44,8 +45,11 @@ export interface FormContextProps {
   handleNext?: () => void;
   handleBack?: () => void;
   handleSelectChange: (e: SelectChangeEvent) => void;
-  handleGeneroChange: (value:string) => void;
-  handleToggle: (e:React.ChangeEvent<HTMLInputElement>,checked:boolean) => void;
+  handleGeneroChange: (value: string) => void;
+  handleToggle: (
+    e: React.ChangeEvent<HTMLInputElement>,
+    checked: boolean
+  ) => void;
 }
 
 // Crear el Contexto
@@ -57,7 +61,7 @@ const FormProvider: React.FC<{ children: React.ReactNode }> = ({
 }) => {
   const [activeStep, setActiveStep] = useState(0);
   const [formData, setFormData] = useState({
-    aporte:0,
+    aporte: 0,
     primerNombre: "",
     segundoNombre: "",
     primerApellido: "",
@@ -81,58 +85,50 @@ const FormProvider: React.FC<{ children: React.ReactNode }> = ({
     ingresosMensuales: 0,
     centroTrabajo: "",
     actividadEconomica: "",
-    cardnumber:"",
-    formaPago:"",
-    diaDebito:"",
-    expiryDate:"",
-    tieneSeguro:false,
-    prima:0
+    cardnumber: "",
+    formaPago: "",
+    diaDebito: "",
+    expiryDate: "",
+    tieneSeguro: false,
+    prima: 0,
+    cuenta: "",
   });
 
   const handleInputChange = (event: any) => {
-
-    const { name, value } = event.target;
-    setFormData((prevFormData) => ({
-      ...prevFormData,
-      [name]: value,
-    }));
-  
-  };
-
-  const handleSelectChange = (event: SelectChangeEvent) => {
-    
+    console.log("Input Changging...");
     console.log(event.target.value);
     const { name, value } = event.target;
     setFormData((prevFormData) => ({
       ...prevFormData,
       [name]: value,
     }));
-  
   };
 
-  const handleGeneroChange = (value:string) => {
-    
+  const handleSelectChange = (event: SelectChangeEvent) => {
+    console.log(event.target.value);
+    const { name, value } = event.target;
+    setFormData((prevFormData) => ({
+      ...prevFormData,
+      [name]: value,
+    }));
+  };
+
+  const handleGeneroChange = (value: string) => {
     setFormData((prevFormData) => ({
       ...prevFormData,
       genero: value,
     }));
-  
   };
 
-
-  const handleToggle = (event: any) =>   {
+  const handleToggle = (event: any) => {
     console.log(JSON.stringify(formData));
     const { checked } = event.target;
     const { name } = event.target;
-      setFormData((prevFormData) => ({
-        ...prevFormData,
-       [name]: checked,
-      }));
-
-    };
-
-  
-  
+    setFormData((prevFormData) => ({
+      ...prevFormData,
+      [name]: checked,
+    }));
+  };
 
   /**
    * Maneja el evento de siguiente paso.
@@ -160,7 +156,7 @@ const FormProvider: React.FC<{ children: React.ReactNode }> = ({
         handleSelectChange,
         setFormData,
         handleGeneroChange,
-        handleToggle
+        handleToggle,
       }}
     >
       {children}

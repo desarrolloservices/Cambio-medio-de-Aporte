@@ -19,15 +19,19 @@ import {
   ListItemAvatar,
   ListItemText,
   Avatar,
+  Icon,
 } from "@mui/material";
 import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { FormContext } from "../Context/FormContext"; // Import the FormContext
+import SwitchAccessShortcutAddIcon from '@mui/icons-material/SwitchAccessShortcutAdd';
 import Navegador from "./Navegador";
 import { NumericFormat } from "react-number-format";
 import CreditCardIcon from "@mui/icons-material/CreditCard";
 import MaskExpiry from "./MaskExpiry";
 
+import EastIcon from '@mui/icons-material/East';
+import { DataGrid, GridColDef } from '@mui/x-data-grid';
 
 interface Props {
   // Propiedades del componente
@@ -53,218 +57,307 @@ const theme = createTheme({
 
 const Form1: React.FC<Props> = (props) => {
   // Lógica del componente
-  const { formData, handleInputChange, handleSelectChange,handleToggle } =
+  const { formData, handleInputChange, handleSelectChange, handleToggle } =
     useContext(FormContext); // Use the FormContext
-    
+    const cuentas = ["13242","243242","434343" ];
+    const planes = [
+      {
+        "id": 1,
+        "nombre": "Plan A",
+        "prima": 34,
+        "sumaAsegurada": 1000000
+      },
+      {
+        "id": 2,
+        "nombre": "Plan B",
+        "prima": 100,
+        "sumaAsegurada": 3000000
+      },
+      {
+        "id": 3,
+        "nombre": "Plan C",
+        "prima": 167,
+        "sumaAsegurada": 500000
+      },
+      {
+        "id": 4,
+        "nombre": "Plan D",
+        "prima": 334,
+        "sumaAsegurada": 1000000
+      },
+      {
+        "id": 5,
+        "nombre": "Plan E",
+        "prima": 667,
+        "sumaAsegurada": 2000000
+      },
+      {
+        "id": 6,
+        "nombre": "Plan F",
+        "prima": 834,
+        "sumaAsegurada": 2500000
+      },
+      {
+        "id": 7,
+        "nombre": "Plan G",
+        "prima": 1000,
+        "sumaAsegurada": 3000000
+      }
+    ];
+
+    const planesDolares = [
+      {
+        "id": 1,
+        "nombre": "Plan A",
+        "prima": 1.70,
+        "sumaAsegurada": 5000
+      },
+      {
+        "id": 2,
+        "nombre": "Plan B",
+        "prima": 5.00,
+        "sumaAsegurada": 15000
+      },
+      {
+        "id": 3,
+        "nombre": "Plan C",
+        "prima": 8.34,
+        "sumaAsegurada": 25000
+      },
+      {
+        "id": 4,
+        "nombre": "Plan D",
+        "prima": 17.00,
+        "sumaAsegurada": 50000
+      },
+      {
+        "id": 5,
+        "nombre": "Plan E",
+        "prima": 27.00,
+        "sumaAsegurada": 80000
+      },
+      {
+        "id": 6,
+        "nombre": "Plan F",
+        "prima": 34.00,
+        "sumaAsegurada": 100000
+      },
+      {
+        "id": 7,
+        "nombre": "Plan G",
+        "prima": 41.00,
+        "sumaAsegurada": 122500
+      }
+    ];
+
+    const columns: GridColDef[] = [
+      { field: 'nombre', headerName: 'Plan', width: 70 },
+      { field: 'prima', headerName: 'prima', width: 130 },
+      { field: 'sumaAsegurada', headerName: 'sumaAsegurada', width: 130 },
+
+    ];
     
 
   return (
     <form>
       <Grid container spacing={2} rowSpacing={4}>
-      <Grid item xs={12}>
-                  <FormControl variant="outlined" fullWidth>
-                    <InputLabel id="cuenta-label">
-                      Selecciona tu cuenta
-                    </InputLabel>
-                    <Select
-                      labelId="cuenta-label"
-                      id="cuenta"
-                      required
-                      label="Selecciona tu cuenta"
-                    >
-                      <MenuItem value={124454}>124454</MenuItem>
-                      <MenuItem value={34454}>34454</MenuItem>
-                      <MenuItem value={54545}>54545</MenuItem>
-                    </Select>
-                  </FormControl>
-                </Grid>
+        <Grid item xs={12}>
+      
+          <FormControl variant="outlined" fullWidth>
+            <InputLabel id="cuenta-label">Selecciona tu cuenta</InputLabel>
+            <Select
+              labelId="cuenta-label"
+              id="cuenta"
+              required
+              name="cuenta"
+              label="Selecciona tu cuenta"
+              onChange={handleSelectChange}
+              value={formData.cuenta}
+              inputProps={{startAdornment: 
+                <InputAdornment position="start">
+              <EastIcon />
+              </InputAdornment>
+            }}
+              
+            >
+              <MenuItem value={124454}>124454</MenuItem>
+              <MenuItem value={34454}>34454</MenuItem>
+              <MenuItem value={54545}>54545</MenuItem>
+            </Select>
+          </FormControl>
+        </Grid>
         <Grid item xs={12} sm={12}>
-          <Typography align="justify" variant="h6" color={theme.palette.secondary.main}>
+          <Typography
+            align="justify"
+            variant="h6"
+            color={theme.palette.secondary.main}
+          >
             Incrementa tu aporte:
           </Typography>
           <br />
           <NumericFormat
-                    required
-                    customInput={TextField}
-                    label="Monto del Aporte"
-                    isAllowed={(values) => {
-                      const { floatValue } = values;
-                      return floatValue !== undefined && floatValue <= 100000;
-                    }}
-                    max={100000}
-                    min={0}
-                    thousandSeparator={true}
-                    InputProps={{
-                      startAdornment: (
-                        <InputAdornment position="start">$</InputAdornment>
-                      ),
-                      inputProps: { min: 0, max: 1000000 },
-                    }}
-                    fullWidth
-                  />
-        </Grid>
-        <Grid item xs={12}  >
-          <Typography  variant="h6" align="justify" color={theme.palette.secondary.main}>
-            Aumenta tu prima de seguro:
-          </Typography>
-<br />
-      
-          <TextField
-            name="prima"
-            label="Prima de Seguro"
-            type="number"
-            value={formData.prima}
-            onChange={handleInputChange}
+            required
+            customInput={TextField}
+            label="Monto del Aporte"
+            isAllowed={(values) => {
+              const { floatValue } = values;
+              return floatValue !== undefined && floatValue <= 100000;
+            }}
+            max={100000}
+            min={0}
+            thousandSeparator={true}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">$</InputAdornment>
+              ),
+         
+              inputProps: { min: 0, max: 1000000 },
+            }}
             fullWidth
           />
-          <Checkbox
-          name="tieneSeguro"
-          //onChange={handleToggle(value)}
-          onChange={handleToggle}
-          checked={formData.tieneSeguro}
-           />
         </Grid>
-       <Grid item xs={12}>
-                    
-                    {
-                      formData.tieneSeguro && (
-                        <List dense sx={{ width: '100%', maxWidth: 360, bgcolor: 'background.paper' }}>
-                        {[0, 1, 2, 3].map((value) => {
-                          const labelId = `checkbox-list-secondary-label-${value}`;
-                         
-
-                          return (
-                            <ListItem
-                              key={value}
-                              secondaryAction={
-                                <Checkbox
-                                  edge="end"
-                                  //onChange={handleToggle(value)}
-                                  //checked={formData.tieneSeguro}
-                                  inputProps={{ 'aria-labelledby': labelId }}
-                                />
-                              }
-                              disablePadding
-                            >
-                              <ListItemButton>
-                                <ListItemText id={labelId} primary={`Line item ${value + 1}`} />
-                              </ListItemButton>
-                            </ListItem>
-                          );
-                        })}
-                      </List>
-                      ) 
-                    }
       
+        <Grid item xs={12} >
+        <Typography
+            variant="h6"
+            align="justify"
+            color={theme.palette.secondary.main}
+            mb={2}
+          >
+            Adquiere tu seguro de vida opcional:
+          </Typography>
+          <Typography align="left" color={theme.palette.primary.main} mb={2}>
+            Selecciona tu plan:
+          </Typography>
+            {/* <List
+              dense
+              sx={{ width: "100%", maxWidth: 560, bgcolor: "background.paper" }}
+            >
+              {planes.map((value) => {
+                const labelId = `checkbox-list-secondary-label-${value}`;
 
-       </Grid>
+                return (
+                  <ListItem
+                    key={value.nombre}
+                    secondaryAction={
+                      <Checkbox
+                        edge="end"
+                        inputProps={{ "aria-labelledby": labelId }}
+                      />
+                    }
+                    disablePadding
+                  >
+                    <ListItemButton>
+                      <ListItemText
+                        id={labelId}
+                        primary={`${value.nombre} - Prima: $${value.prima} - Suma Asegurada: $${value.sumaAsegurada}`}
+                        
+                      />
+                    </ListItemButton>
+                  </ListItem>
+                );
+              })}
+            </List> */}
+            <DataGrid
+        rows={planes}
+        columns={columns}
+        
        
-       
+        checkboxSelection
+        
+      />
+        </Grid>
+
         <Grid item xs={12} sm={12}>
-          <Typography variant="h6" align="justify" color={theme.palette.secondary.main}>
+          <Typography
+            variant="h6"
+            align="justify"
+            color={theme.palette.secondary.main}
+          >
             Actualiza tu forma de pago: {formData.formaPago}
           </Typography>
 
-      <br />
+          <br />
           <FormControl fullWidth>
             <InputLabel>Forma de Pago</InputLabel>
             <Select
-            multiple={false}
-            label="Forma de Pago"
+              multiple={false}
+              label="Forma de Pago"
               name="formaPago"
               value={formData.formaPago}
               onChange={handleSelectChange}
             >
-              <MenuItem value="Carné" >Carné</MenuItem>
+              <MenuItem value="Carné">Carné</MenuItem>
               <MenuItem value="Débito a Tarjeta">Débito a Tarjeta</MenuItem>
-             
             </Select>
           </FormControl>
         </Grid>
-        {
-            formData.formaPago === "Débito a Tarjeta" && (
-<>
-              <Grid item xs={12} sm={6}>
-                  <TextField
-                    id="cardnumber"
-                    label="Número de la Tarjeta"
-                    variant="outlined"
-                    type="number"
-                    value={formData?.cardnumber}
-                    //onChange={handleSelectChange}
-                    fullWidth
-                    InputProps={{
-                      startAdornment: (
-                        <InputAdornment position="start">
-                          <CreditCardIcon />
-                        </InputAdornment>
-                      ),
-                    }}
-                    required
-                  />
-                </Grid>
+        {formData.formaPago === "Débito a Tarjeta" && (
+          <>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                id="cardnumber"
+                label="Número de la Tarjeta"
+                variant="outlined"
+                type="number"
+                value={formData?.cardnumber}
+                //onChange={handleSelectChange}
+                fullWidth
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <CreditCardIcon />
+                    </InputAdornment>
+                  ),
+                }}
+                required
+              />
+            </Grid>
 
-                <Grid item xs={6} sm={3}>
-                  <FormControl>
-                  <MaskExpiry 
+            <Grid item xs={6} sm={3}>
+              <FormControl>
+              <MaskExpiry 
                     id="expiryDate"
-                    name="expiryDate"
-                   label="Vence"
+                    label="Fecha de vencimiento"
                     placeholder="MM / YY"
                     variant="outlined"
-                   value={formData.expiryDate}
-                    onChange={handleInputChange}
+                    value={formData.expiryDate}
+                    name="expiryDate"
+                    onChange={(e) =>
+                      //setState({ ...state, expiry: e.target.value })
+                    console.log("Cambiando fecha de vencimiento")
+                    //IMask.onChange={console.log("Cambiando fecha de vencimiento")}
+                    }
                     fullWidth
                   />
-                   
-                  </FormControl>
-                </Grid>
-                <Grid item xs={6} sm={3}>
-         
-          <FormControl fullWidth>
-            <InputLabel>Día del débito</InputLabel>
-            <Select
-            multiple={false}
-            label="Día del débito"
-              name="diaDebito"
-              value={formData.diaDebito}
-              onChange={handleSelectChange}
-            >
-              <MenuItem value="02" >02</MenuItem>
-              <MenuItem value="03" >03</MenuItem>
-              <MenuItem value="04" >04</MenuItem>
-              <MenuItem value="05" >05</MenuItem>
-              <MenuItem value="06" >06</MenuItem>
-              <MenuItem value="07" >07</MenuItem>
-              <MenuItem value="08" >08</MenuItem>
-              <MenuItem value="09" >09</MenuItem>
-              <MenuItem value="10" >10</MenuItem>
-              <MenuItem value="11" >11</MenuItem>
-              <MenuItem value="12" >12</MenuItem>
-              <MenuItem value="13" >13</MenuItem>
-              <MenuItem value="14" >14</MenuItem>
-              <MenuItem value="15" >15</MenuItem>
-              <MenuItem value="16" >16</MenuItem>
-              <MenuItem value="17" >17</MenuItem>
-              <MenuItem value="18" >18</MenuItem>
-              <MenuItem value="19" >19</MenuItem>
-              <MenuItem value="20" >20</MenuItem>
-              <MenuItem value="21" >21</MenuItem>
-              <MenuItem value="22" >22</MenuItem>
-              <MenuItem value="23" >23</MenuItem>
-              <MenuItem value="24" >24</MenuItem>
-              <MenuItem value="25" >25</MenuItem>
-              <MenuItem value="26" >26</MenuItem>
-              <MenuItem value="27" >27</MenuItem>
-              <MenuItem value="28" >28</MenuItem>
-             
-            </Select>
-          </FormControl>
-        </Grid>
-                </>
-            )
-        }
-        
+              </FormControl>
+            </Grid>
+            <Grid item xs={6} sm={3}>
+              <FormControl fullWidth>
+                <InputLabel>Día del débito</InputLabel>
+                <Select
+                  multiple={false}
+                  label="Día del débito"
+                  name="diaDebito"
+                  value={formData.diaDebito}
+                  onChange={handleSelectChange}
+                  defaultValue="15"
+                >
+                  {
+                    [
+                      "0","1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20","21","22","23","24","25","26","27","28"
+                    ].map((value) => {
+                      return (
+                        <MenuItem value={value} key={value}>{value}</MenuItem>
+                      );
+                    })
+                  }
+                </Select>
+              </FormControl>
+            </Grid>
+          </>
+        )}
+
         <Navegador />
       </Grid>
     </form>
