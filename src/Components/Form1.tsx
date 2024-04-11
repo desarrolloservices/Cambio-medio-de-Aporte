@@ -13,6 +13,12 @@ import {
   createTheme,
   Typography,
   InputAdornment,
+  List,
+  ListItem,
+  ListItemButton,
+  ListItemAvatar,
+  ListItemText,
+  Avatar,
 } from "@mui/material";
 import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
@@ -47,9 +53,10 @@ const theme = createTheme({
 
 const Form1: React.FC<Props> = (props) => {
   // Lógica del componente
-  const { formData, handleInputChange, handleNext, handleSelectChange,setFormData,handleGeneroChange } =
+  const { formData, handleInputChange, handleSelectChange,handleToggle } =
     useContext(FormContext); // Use the FormContext
-    const [dobleNacionalidad, setDobleNacionalidad] = React.useState(false);
+    
+    
 
   return (
     <form>
@@ -103,14 +110,54 @@ const Form1: React.FC<Props> = (props) => {
 <br />
       
           <TextField
-            name="tipoIdentificacion"
-            label="Tipo de Identificación"
-            value={formData.tipoIdentificacion}
+            name="prima"
+            label="Prima de Seguro"
+            type="number"
+            value={formData.prima}
             onChange={handleInputChange}
             fullWidth
           />
+          <Checkbox
+          name="tieneSeguro"
+          //onChange={handleToggle(value)}
+          onChange={handleToggle}
+          checked={formData.tieneSeguro}
+           />
         </Grid>
-       
+       <Grid item xs={12}>
+                    
+                    {
+                      formData.tieneSeguro && (
+                        <List dense sx={{ width: '100%', maxWidth: 360, bgcolor: 'background.paper' }}>
+                        {[0, 1, 2, 3].map((value) => {
+                          const labelId = `checkbox-list-secondary-label-${value}`;
+                         
+
+                          return (
+                            <ListItem
+                              key={value}
+                              secondaryAction={
+                                <Checkbox
+                                  edge="end"
+                                  //onChange={handleToggle(value)}
+                                  //checked={formData.tieneSeguro}
+                                  inputProps={{ 'aria-labelledby': labelId }}
+                                />
+                              }
+                              disablePadding
+                            >
+                              <ListItemButton>
+                                <ListItemText id={labelId} primary={`Line item ${value + 1}`} />
+                              </ListItemButton>
+                            </ListItem>
+                          );
+                        })}
+                      </List>
+                      ) 
+                    }
+      
+
+       </Grid>
        
        
         <Grid item xs={12} sm={12}>
@@ -143,7 +190,7 @@ const Form1: React.FC<Props> = (props) => {
                     label="Número de la Tarjeta"
                     variant="outlined"
                     type="number"
-                    value={formData.cardnumber}
+                    value={formData?.cardnumber}
                     //onChange={handleSelectChange}
                     fullWidth
                     InputProps={{

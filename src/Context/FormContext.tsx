@@ -31,6 +31,8 @@ export interface FormData {
   formaPago: string;
   diaDebito: string;
   expiryDate: string;
+  tieneSeguro: boolean;
+  prima:number
 }
 
 export interface FormContextProps {
@@ -43,6 +45,7 @@ export interface FormContextProps {
   handleBack?: () => void;
   handleSelectChange: (e: SelectChangeEvent) => void;
   handleGeneroChange: (value:string) => void;
+  handleToggle: (e:React.ChangeEvent<HTMLInputElement>,checked:boolean) => void;
 }
 
 // Crear el Contexto
@@ -81,7 +84,9 @@ const FormProvider: React.FC<{ children: React.ReactNode }> = ({
     cardnumber:"",
     formaPago:"",
     diaDebito:"",
-    expiryDate:""
+    expiryDate:"",
+    tieneSeguro:false,
+    prima:0
   });
 
   const handleInputChange = (event: any) => {
@@ -115,6 +120,20 @@ const FormProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
 
+  const handleToggle = (event: any) =>   {
+    console.log(JSON.stringify(formData));
+    const { checked } = event.target;
+    const { name } = event.target;
+      setFormData((prevFormData) => ({
+        ...prevFormData,
+       [name]: checked,
+      }));
+
+    };
+
+  
+  
+
   /**
    * Maneja el evento de siguiente paso.
    */
@@ -140,7 +159,8 @@ const FormProvider: React.FC<{ children: React.ReactNode }> = ({
         handleBack,
         handleSelectChange,
         setFormData,
-        handleGeneroChange
+        handleGeneroChange,
+        handleToggle
       }}
     >
       {children}
