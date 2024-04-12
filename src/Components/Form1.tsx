@@ -1,4 +1,4 @@
-import React, { useContext } from "react";
+import React, { useContext, useEffect } from "react";
 import {
   TextField,
   Button,
@@ -7,31 +7,27 @@ import {
   FormControl,
   InputLabel,
   Grid,
-  ButtonGroup,
-  FormControlLabel,
-  Checkbox,
+
   createTheme,
   Typography,
   InputAdornment,
-  List,
-  ListItem,
-  ListItemButton,
-  ListItemAvatar,
-  ListItemText,
-  Avatar,
-  Icon,
+
+  Slider,
+  Box,
 } from "@mui/material";
 import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { FormContext } from "../Context/FormContext"; // Import the FormContext
-import SwitchAccessShortcutAddIcon from '@mui/icons-material/SwitchAccessShortcutAdd';
+import SwitchAccessShortcutAddIcon from "@mui/icons-material/SwitchAccessShortcutAdd";
 import Navegador from "./Navegador";
 import { NumericFormat } from "react-number-format";
 import CreditCardIcon from "@mui/icons-material/CreditCard";
 import MaskExpiry from "./MaskExpiry";
-
-import EastIcon from '@mui/icons-material/East';
-import { DataGrid, GridColDef } from '@mui/x-data-grid';
+import LocalOfferIcon from "@mui/icons-material/LocalOffer";
+import EastIcon from "@mui/icons-material/East";
+import { DataGrid, GridColDef } from "@mui/x-data-grid";
+import { Plan } from "../Interfaces/Tipos";
+import { planes,planesDolares } from "../CustomData/Planes";
 
 interface Props {
   // Propiedades del componente
@@ -57,112 +53,37 @@ const theme = createTheme({
 
 const Form1: React.FC<Props> = (props) => {
   // Lógica del componente
-  const { formData, handleInputChange, handleSelectChange, handleToggle } =
+  const { formData, handleInputChange, handleSelectChange,setFormData } =
     useContext(FormContext); // Use the FormContext
-    const cuentas = ["13242","243242","434343" ];
-    const planes = [
-      {
-        "id": 1,
-        "nombre": "Plan A",
-        "prima": 34,
-        "sumaAsegurada": 1000000
-      },
-      {
-        "id": 2,
-        "nombre": "Plan B",
-        "prima": 100,
-        "sumaAsegurada": 3000000
-      },
-      {
-        "id": 3,
-        "nombre": "Plan C",
-        "prima": 167,
-        "sumaAsegurada": 500000
-      },
-      {
-        "id": 4,
-        "nombre": "Plan D",
-        "prima": 334,
-        "sumaAsegurada": 1000000
-      },
-      {
-        "id": 5,
-        "nombre": "Plan E",
-        "prima": 667,
-        "sumaAsegurada": 2000000
-      },
-      {
-        "id": 6,
-        "nombre": "Plan F",
-        "prima": 834,
-        "sumaAsegurada": 2500000
-      },
-      {
-        "id": 7,
-        "nombre": "Plan G",
-        "prima": 1000,
-        "sumaAsegurada": 3000000
-      }
-    ];
+  const cuentas = ["13242", "243242", "434343"];
+  
+  
+  const [planSeleccionado,setPlanSeleccionado] = React.useState<Plan>(planes[0]);
+  
 
-    const planesDolares = [
-      {
-        "id": 1,
-        "nombre": "Plan A",
-        "prima": 1.70,
-        "sumaAsegurada": 5000
-      },
-      {
-        "id": 2,
-        "nombre": "Plan B",
-        "prima": 5.00,
-        "sumaAsegurada": 15000
-      },
-      {
-        "id": 3,
-        "nombre": "Plan C",
-        "prima": 8.34,
-        "sumaAsegurada": 25000
-      },
-      {
-        "id": 4,
-        "nombre": "Plan D",
-        "prima": 17.00,
-        "sumaAsegurada": 50000
-      },
-      {
-        "id": 5,
-        "nombre": "Plan E",
-        "prima": 27.00,
-        "sumaAsegurada": 80000
-      },
-      {
-        "id": 6,
-        "nombre": "Plan F",
-        "prima": 34.00,
-        "sumaAsegurada": 100000
-      },
-      {
-        "id": 7,
-        "nombre": "Plan G",
-        "prima": 41.00,
-        "sumaAsegurada": 122500
-      }
-    ];
+  const filterPlanes = (prima:number) => {
+    setPlanSeleccionado(
+      planes.filter(plan => plan.prima === prima)[0]
+    )
+  
+  }
 
-    const columns: GridColDef[] = [
-      { field: 'nombre', headerName: 'Plan', width: 70 },
-      { field: 'prima', headerName: 'prima', width: 130 },
-      { field: 'sumaAsegurada', headerName: 'sumaAsegurada', width: 130 },
+useEffect(() => {
+  if(setFormData){
+    setFormData((prev) => ({
+      ...prev,
+      prima: planSeleccionado.prima,
+      sumaAsegurada: planSeleccionado.sumaAsegurada
+    }))
+  }
 
-    ];
-    
+}, [planSeleccionado])
+
 
   return (
     <form>
       <Grid container spacing={2} rowSpacing={4}>
         <Grid item xs={12}>
-      
           <FormControl variant="outlined" fullWidth>
             <InputLabel id="cuenta-label">Selecciona tu cuenta</InputLabel>
             <Select
@@ -173,12 +94,13 @@ const Form1: React.FC<Props> = (props) => {
               label="Selecciona tu cuenta"
               onChange={handleSelectChange}
               value={formData.cuenta}
-              inputProps={{startAdornment: 
-                <InputAdornment position="start">
-              <EastIcon />
-              </InputAdornment>
-            }}
-              
+              inputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <EastIcon />
+                  </InputAdornment>
+                ),
+              }}
             >
               <MenuItem value={124454}>124454</MenuItem>
               <MenuItem value={34454}>34454</MenuItem>
@@ -197,7 +119,9 @@ const Form1: React.FC<Props> = (props) => {
           <br />
           <NumericFormat
             required
+            name="aporte"
             customInput={TextField}
+            onChange={handleInputChange}
             label="Monto del Aporte"
             isAllowed={(values) => {
               const { floatValue } = values;
@@ -210,62 +134,75 @@ const Form1: React.FC<Props> = (props) => {
               startAdornment: (
                 <InputAdornment position="start">$</InputAdornment>
               ),
-         
+
               inputProps: { min: 0, max: 1000000 },
             }}
             fullWidth
           />
         </Grid>
-      
-        <Grid item xs={12} >
-        <Typography
+
+        <Grid item xs={12}>
+          <Grid sx={{display:"flex", alignItems: 'center',
+    flexWrap: 'wrap',flexDirection:"row",alignContent:"center"}} gap={1} mb={2}>
+          <LocalOfferIcon color="primary" fontSize="small"  />
+          <Typography
             variant="h6"
-            align="justify"
+             
             color={theme.palette.secondary.main}
-            mb={2}
+          
           >
+            
             Adquiere tu seguro de vida opcional:
           </Typography>
+          </Grid>
+          <Typography
+            variant="h6"
+
+            color={theme.palette.secondary.main}
+          
+          >
+            
+            Plan Seleccionado: <strong>{planSeleccionado.nombre}</strong>
+          </Typography>
+          <Typography
+            variant="body1"
+        
+            color={theme.palette.secondary.main}
+          
+          >
+            
+            Suma Asegurada: <strong>{planSeleccionado.sumaAsegurada}</strong>
+          </Typography>
+
           <Typography align="left" color={theme.palette.primary.main} mb={2}>
             Selecciona tu plan:
           </Typography>
-            {/* <List
-              dense
-              sx={{ width: "100%", maxWidth: 560, bgcolor: "background.paper" }}
-            >
-              {planes.map((value) => {
-                const labelId = `checkbox-list-secondary-label-${value}`;
-
-                return (
-                  <ListItem
-                    key={value.nombre}
-                    secondaryAction={
-                      <Checkbox
-                        edge="end"
-                        inputProps={{ "aria-labelledby": labelId }}
-                      />
-                    }
-                    disablePadding
-                  >
-                    <ListItemButton>
-                      <ListItemText
-                        id={labelId}
-                        primary={`${value.nombre} - Prima: $${value.prima} - Suma Asegurada: $${value.sumaAsegurada}`}
-                        
-                      />
-                    </ListItemButton>
-                  </ListItem>
-                );
-              })}
-            </List> */}
-            <DataGrid
-        rows={planes}
-        columns={columns}
-        
-       
-        checkboxSelection
-        
-      />
+         
+          <Box
+            sx={{
+              width: "90%",
+              textAlign: "center",
+              justifyContent: "center",
+              alignItems: "center",
+              alignContent: "center",
+              margin: "auto",
+            }}
+          >
+            <Slider
+              aria-label="Small steps"
+              defaultValue={0}
+              aria-valuetext={"valuetex"}
+              onChange={(e, value) => filterPlanes(value as number)}
+              marks={planes.map((value) => ({
+                value: value.prima,
+                label: String(value.prima),
+              }))}
+              min={Math.min(...planes.map((o) => o.prima))}
+              max={Math.max(...planes.map((o) => o.prima))}
+              step={null}
+              valueLabelDisplay="auto"
+            />
+          </Box>
         </Grid>
 
         <Grid item xs={12} sm={12}>
@@ -297,11 +234,12 @@ const Form1: React.FC<Props> = (props) => {
             <Grid item xs={12} sm={6}>
               <TextField
                 id="cardnumber"
+                name="cardnumber"
                 label="Número de la Tarjeta"
                 variant="outlined"
                 type="number"
-                value={formData?.cardnumber}
-                //onChange={handleSelectChange}
+                value={parseInt(formData?.cardnumber)}
+                onChange={handleInputChange}
                 fullWidth
                 InputProps={{
                   startAdornment: (
@@ -316,20 +254,21 @@ const Form1: React.FC<Props> = (props) => {
 
             <Grid item xs={6} sm={3}>
               <FormControl>
-              <MaskExpiry 
-                    id="expiryDate"
-                    label="Fecha de vencimiento"
-                    placeholder="MM / YY"
-                    variant="outlined"
-                    value={formData.expiryDate}
-                    name="expiryDate"
-                    onChange={(e) =>
+                <MaskExpiry
+                  id="expiryDate"
+                  label="Fecha de vencimiento"
+                  placeholder="MM / YY"
+                  variant="outlined"
+                  value={formData.expiryDate}
+                  name="expiryDate"
+                  onChange={
+                    (e) =>
                       //setState({ ...state, expiry: e.target.value })
-                    console.log("Cambiando fecha de vencimiento")
+                      console.log("Cambiando fecha de vencimiento")
                     //IMask.onChange={console.log("Cambiando fecha de vencimiento")}
-                    }
-                    fullWidth
-                  />
+                  }
+                  fullWidth
+                />
               </FormControl>
             </Grid>
             <Grid item xs={6} sm={3}>
@@ -343,22 +282,50 @@ const Form1: React.FC<Props> = (props) => {
                   onChange={handleSelectChange}
                   defaultValue="15"
                 >
-                  {
-                    [
-                      "0","1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20","21","22","23","24","25","26","27","28"
-                    ].map((value) => {
-                      return (
-                        <MenuItem value={value} key={value}>{value}</MenuItem>
-                      );
-                    })
-                  }
+                  {[
+                    "0",
+                    "1",
+                    "2",
+                    "3",
+                    "4",
+                    "5",
+                    "6",
+                    "7",
+                    "8",
+                    "9",
+                    "10",
+                    "11",
+                    "12",
+                    "13",
+                    "14",
+                    "15",
+                    "16",
+                    "17",
+                    "18",
+                    "19",
+                    "20",
+                    "21",
+                    "22",
+                    "23",
+                    "24",
+                    "25",
+                    "26",
+                    "27",
+                    "28",
+                  ].map((value) => {
+                    return (
+                      <MenuItem value={value} key={value}>
+                        {value}
+                      </MenuItem>
+                    );
+                  })}
                 </Select>
               </FormControl>
             </Grid>
           </>
         )}
 
-        <Navegador />
+        {Navegador && <Navegador />}
       </Grid>
     </form>
   );

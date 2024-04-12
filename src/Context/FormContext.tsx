@@ -10,30 +10,13 @@ export interface FormData {
   segundoApellido: string;
   tipoIdentificacion: string;
   numeroIdentificacion: string;
-  nacionalidad1: string;
-  nacionalidad2: string;
-  genero: string;
-  fechaNacimiento: null;
-  correoElectronico: string;
-  nivelEscolaridad: string;
-  profesion: string;
-  ocupacion: string;
-  telefonoFijo: string;
-  celular: string;
-  direccionResidencia: string;
-  municipio: string;
-  departamento: string;
-  fuenteIngresos: string;
-  ingresosMensuales: number;
-  centroTrabajo: string;
-  actividadEconomica: string;
   cardnumber: string;
   formaPago: string;
   diaDebito: string;
   expiryDate: string;
-  tieneSeguro: boolean;
   prima: number;
   cuenta: string;
+  sumaAsegurada: number;
 }
 
 export interface FormContextProps {
@@ -41,7 +24,7 @@ export interface FormContextProps {
   handleInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   activeStep: number;
   setActiveStep?: React.Dispatch<React.SetStateAction<number>>;
-  setFormData?: React.Dispatch<React.SetStateAction<FormData>>;
+  setFormData?: React.Dispatch<React.SetStateAction<FormData>> | undefined;
   handleNext?: () => void;
   handleBack?: () => void;
   handleSelectChange: (e: SelectChangeEvent) => void;
@@ -68,30 +51,13 @@ const FormProvider: React.FC<{ children: React.ReactNode }> = ({
     segundoApellido: "",
     tipoIdentificacion: "",
     numeroIdentificacion: "",
-    nacionalidad1: "",
-    nacionalidad2: "",
-    genero: "",
-    fechaNacimiento: null,
-    correoElectronico: "",
-    nivelEscolaridad: "",
-    profesion: "",
-    ocupacion: "",
-    telefonoFijo: "",
-    celular: "",
-    direccionResidencia: "",
-    municipio: "",
-    departamento: "",
-    fuenteIngresos: "",
-    ingresosMensuales: 0,
-    centroTrabajo: "",
-    actividadEconomica: "",
     cardnumber: "",
     formaPago: "",
     diaDebito: "",
-    expiryDate: "",
-    tieneSeguro: false,
+    expiryDate: "", 
     prima: 0,
     cuenta: "",
+    sumaAsegurada: 0,
   });
 
   const handleInputChange = (event: any) => {

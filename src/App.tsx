@@ -16,9 +16,7 @@ import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { FormProvider, FormContext } from "./Context/FormContext"; // Asegúrate de que la ruta sea correcta
 import Form1 from "./Components/Form1";
-import Form2 from "./Components/Form2";
-import Form3 from "./Components/Form3";
-import Form4 from "./Components/Form4";
+
 
 // Create a new theme using Nunito Sans
 const theme = createTheme({
