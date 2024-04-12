@@ -3,7 +3,7 @@ import { Plan } from "../Interfaces/Tipos";
 export const planes: Plan[] = [
     {
       id: 0,
-      nombre: "No has seleccionado un plan",
+      nombre: "No has seleccionado un plan 😔",
       prima: 0,
       sumaAsegurada: 0,
     },

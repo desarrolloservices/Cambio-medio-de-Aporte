@@ -1,4 +1,4 @@
-import React, { useContext, useEffect } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import {
   TextField,
   Button,
@@ -7,13 +7,15 @@ import {
   FormControl,
   InputLabel,
   Grid,
-
+  Card,
+  CardHeader,
   createTheme,
   Typography,
   InputAdornment,
 
   Slider,
   Box,
+  CardContent,
 } from "@mui/material";
 import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
@@ -56,6 +58,7 @@ const Form1: React.FC<Props> = (props) => {
   const { formData, handleInputChange, handleSelectChange,setFormData } =
     useContext(FormContext); // Use the FormContext
   const cuentas = ["13242", "243242", "434343"];
+  const [moneda,setMoneda]=useState("L");
   
   
   const [planSeleccionado,setPlanSeleccionado] = React.useState<Plan>(planes[0]);
@@ -102,9 +105,13 @@ useEffect(() => {
                 ),
               }}
             >
-              <MenuItem value={124454}>124454</MenuItem>
-              <MenuItem value={34454}>34454</MenuItem>
-              <MenuItem value={54545}>54545</MenuItem>
+              {
+                cuentas.map((cuenta) => {
+                  return <MenuItem value={cuenta} key={cuenta}>{cuenta}</MenuItem>
+                
+                })
+              }
+             
             </Select>
           </FormControl>
         </Grid>
@@ -132,7 +139,7 @@ useEffect(() => {
             thousandSeparator={true}
             InputProps={{
               startAdornment: (
-                <InputAdornment position="start">$</InputAdornment>
+                <InputAdornment position="start">{moneda}</InputAdornment>
               ),
 
               inputProps: { min: 0, max: 1000000 },
@@ -155,29 +162,7 @@ useEffect(() => {
             Adquiere tu seguro de vida opcional:
           </Typography>
           </Grid>
-          <Typography
-            variant="h6"
-
-            color={theme.palette.secondary.main}
-          
-          >
-            
-            Plan Seleccionado: <strong>{planSeleccionado.nombre}</strong>
-          </Typography>
-          <Typography
-            variant="body1"
         
-            color={theme.palette.secondary.main}
-          
-          >
-            
-            Suma Asegurada: <strong>{planSeleccionado.sumaAsegurada}</strong>
-          </Typography>
-
-          <Typography align="left" color={theme.palette.primary.main} mb={2}>
-            Selecciona tu plan:
-          </Typography>
-         
           <Box
             sx={{
               width: "90%",
@@ -187,6 +172,7 @@ useEffect(() => {
               alignContent: "center",
               margin: "auto",
             }}
+            mb={2}
           >
             <Slider
               aria-label="Small steps"
@@ -195,14 +181,51 @@ useEffect(() => {
               onChange={(e, value) => filterPlanes(value as number)}
               marks={planes.map((value) => ({
                 value: value.prima,
-                label: String(value.prima),
+                label: `${moneda} ${value.prima}`,
               }))}
               min={Math.min(...planes.map((o) => o.prima))}
               max={Math.max(...planes.map((o) => o.prima))}
               step={null}
               valueLabelDisplay="auto"
+              sx={{ display: { xs: 'none', md: 'block' }}}
             />
           </Box>
+          <Box mb={2}>
+          <FormControl fullWidth  sx={{ display: { xs: 'block', md: 'none' }}}>
+            <InputLabel>Prima que pagarías</InputLabel>
+            <Select
+              multiple={false}
+              label="Selecciona tu plan"
+              name="plan"
+              defaultValue={0}
+              onChange={(event)=>{filterPlanes(event.target.value as number)}}
+              sx={{width:"100%"}}
+            >
+              {
+                planes.map((plan) => {
+                  return <MenuItem value={plan.prima} key={plan.prima}>{`${plan.nombre} - ${moneda} ${plan.prima}`}</MenuItem>
+                
+                })
+              }
+             
+            </Select>
+          </FormControl>
+          </Box>
+         {
+         planSeleccionado.id>0 && 
+         <Card>
+            <CardHeader
+            title={planSeleccionado.nombre}
+            subheader={"Prima mensual: "+moneda + " " + planSeleccionado.prima.toLocaleString()}
+            />
+            <CardContent>
+            <Typography variant="h6" color={theme.palette.secondary.main}>
+              Suma Asegurada: {moneda} <strong>{planSeleccionado.sumaAsegurada.toLocaleString()}</strong>
+            </Typography>
+           
+          </CardContent>
+          </Card>}
+          
         </Grid>
 
         <Grid item xs={12} sm={12}>

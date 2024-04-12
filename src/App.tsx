@@ -17,7 +17,6 @@ import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { FormProvider, FormContext } from "./Context/FormContext"; // Asegúrate de que la ruta sea correcta
 import Form1 from "./Components/Form1";
 
-
 // Create a new theme using Nunito Sans
 const theme = createTheme({
   typography: {
@@ -66,7 +65,6 @@ const AppContent: React.FC = () => {
   const { setActiveStep, handleBack, handleNext, activeStep, formData } =
     useContext(FormContext);
 
- 
   const handleSubmit = (event: any) => {
     event.preventDefault();
     // Handle form submission logic here
@@ -111,21 +109,21 @@ const AppContent: React.FC = () => {
               mb={2}
             >
               <Typography variant="h4" color={theme.palette.primary.main}>
-              Aumenta tu ahorro y alcanza tus metas!
-              </Typography>
-              
-            </Grid>
-            <Grid item xs={12} mb={3}>
-            <Typography variant="h5" color={theme.palette.secondary.main} >
-           Estimado(a): <strong>DEMO</strong>
+                Aumenta tu ahorro y alcanza tus metas!
               </Typography>
             </Grid>
             <Grid item xs={12} mb={3}>
-            <Typography variant="body1" color={theme.palette.secondary.main} > 
-            Incrementa tu aporte mensual y para tu comodidad, afílialo a un medio automático con tarjeta de crédito o débito.
+              <Typography variant="h5" color={theme.palette.secondary.main}>
+                Estimado(a): <strong>DEMO</strong>
               </Typography>
-              <Typography variant="body1" color={theme.palette.secondary.main} > 
-          Este formulario estará disponible para las próximas 48 horas.
+            </Grid>
+            <Grid item xs={12} mb={3}>
+              <Typography variant="body1" color={theme.palette.secondary.main}>
+                Incrementa tu aporte mensual y para tu comodidad, afílialo a un
+                medio automático con tarjeta de crédito o débito.
+              </Typography>
+              <Typography variant="body1" color={theme.palette.secondary.main}>
+                Este formulario estará disponible para las próximas 48 horas.
               </Typography>
             </Grid>
           </Grid>
@@ -152,8 +150,6 @@ const AppContent: React.FC = () => {
           {activeStep === 2 && (
             <Form3 />
           )} */}
-         
-         
         </Container>
       </div>
     </div>
