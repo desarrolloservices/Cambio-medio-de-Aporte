@@ -12,7 +12,6 @@ import {
   createTheme,
   Typography,
   InputAdornment,
-
   Slider,
   Box,
   CardContent,
@@ -35,7 +34,7 @@ import LocalOfferIcon from "@mui/icons-material/LocalOffer";
 import EastIcon from "@mui/icons-material/East";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { Plan } from "../Interfaces/Tipos";
-import { planes,planesDolares } from "../CustomData/Planes";
+import { planes, planesDolares } from "../CustomData/Planes";
 
 interface Props {
   // Propiedades del componente
@@ -61,13 +60,14 @@ const theme = createTheme({
 
 const Form1: React.FC<Props> = (props) => {
   // Lógica del componente
-  const { formData, handleInputChange, handleSelectChange,setFormData } =
+  const { formData, handleInputChange, handleSelectChange, setFormData } =
     useContext(FormContext); // Use the FormContext
   const cuentas = ["13242", "243242", "434343"];
-  const [moneda,setMoneda]=useState("L");
-  
-  
-  const [planSeleccionado,setPlanSeleccionado] = React.useState<Plan>(planes[0]);
+  const [moneda, setMoneda] = useState("L");
+
+  const [planSeleccionado, setPlanSeleccionado] = React.useState<Plan>(
+    planes[0]
+  );
   const [open, setOpen] = React.useState(false);
 
   const handleClickOpen = () => {
@@ -78,24 +78,19 @@ const Form1: React.FC<Props> = (props) => {
     setOpen(false);
   };
 
-  const filterPlanes = (prima:number) => {
-    setPlanSeleccionado(
-      planes.filter(plan => plan.prima === prima)[0]
-    )
-  
-  }
+  const filterPlanes = (prima: number) => {
+    setPlanSeleccionado(planes.filter((plan) => plan.prima === prima)[0]);
+  };
 
-useEffect(() => {
-  if(setFormData){
-    setFormData((prev) => ({
-      ...prev,
-      prima: planSeleccionado.prima,
-      sumaAsegurada: planSeleccionado.sumaAsegurada
-    }))
-  }
-
-}, [planSeleccionado])
-
+  useEffect(() => {
+    if (setFormData) {
+      setFormData((prev) => ({
+        ...prev,
+        prima: planSeleccionado.prima,
+        sumaAsegurada: planSeleccionado.sumaAsegurada,
+      }));
+    }
+  }, [planSeleccionado]);
 
   return (
     <form>
@@ -119,13 +114,13 @@ useEffect(() => {
                 ),
               }}
             >
-              {
-                cuentas.map((cuenta) => {
-                  return <MenuItem value={cuenta} key={cuenta}>{cuenta}</MenuItem>
-                
-                })
-              }
-             
+              {cuentas.map((cuenta) => {
+                return (
+                  <MenuItem value={cuenta} key={cuenta}>
+                    {cuenta}
+                  </MenuItem>
+                );
+              })}
             </Select>
           </FormControl>
         </Grid>
@@ -163,20 +158,23 @@ useEffect(() => {
         </Grid>
 
         <Grid item xs={12}>
-          <Grid sx={{display:"flex", alignItems: 'center',
-    flexWrap: 'wrap',flexDirection:"row",alignContent:"center"}} gap={1} mb={2}>
-          <LocalOfferIcon color="primary" fontSize="small"  />
-          <Typography
-            variant="h6"
-             
-            color={theme.palette.secondary.main}
-          
+          <Grid
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              flexWrap: "wrap",
+              flexDirection: "row",
+              alignContent: "center",
+            }}
+            gap={1}
+            mb={2}
           >
-            
-            Adquiere tu seguro de vida opcional:
-          </Typography>
+            <LocalOfferIcon color="primary" fontSize="small" />
+            <Typography variant="h6" color={theme.palette.secondary.main}>
+              Adquiere tu seguro de vida opcional:
+            </Typography>
           </Grid>
-        
+
           <Box
             sx={{
               width: "90%",
@@ -201,47 +199,64 @@ useEffect(() => {
               max={Math.max(...planes.map((o) => o.prima))}
               step={null}
               valueLabelDisplay="auto"
-              sx={{ display: { xs: 'none', md: 'block' }}}
+              sx={{ display: { xs: "none", md: "block" } }}
             />
           </Box>
           <Box mb={2}>
-          <FormControl fullWidth  sx={{ display: { xs: 'block', md: 'none' }}}>
-            <InputLabel>Prima que pagarías</InputLabel>
-            <Select
-              multiple={false}
-              label="Selecciona tu plan"
-              name="plan"
-              defaultValue={0}
-              onChange={(event)=>{filterPlanes(event.target.value as number)}}
-              sx={{width:"100%"}}
+            <FormControl
+              fullWidth
+              sx={{ display: { xs: "block", md: "none" } }}
             >
-              {
-                planes.map((plan) => {
-                  return <MenuItem value={plan.prima} key={plan.prima}>{`${plan.nombre} - ${moneda} ${plan.prima}`}</MenuItem>
-                
-                })
-              }
-             
-            </Select>
-          </FormControl>
+              <InputLabel>Prima que pagarías</InputLabel>
+              <Select
+                multiple={false}
+                label="Selecciona tu plan"
+                name="plan"
+                defaultValue={0}
+                onChange={(event) => {
+                  filterPlanes(event.target.value as number);
+                }}
+                sx={{ width: "100%" }}
+              >
+                {planes.map((plan) => {
+                  return (
+                    <MenuItem
+                      value={plan.prima}
+                      key={plan.prima}
+                    >{`${plan.nombre} - ${moneda} ${plan.prima}`}</MenuItem>
+                  );
+                })}
+              </Select>
+            </FormControl>
           </Box>
-         {
-         planSeleccionado.id>0 && 
-         <Card>
-            <CardHeader
-            title={planSeleccionado.nombre}
-            subheader={"Prima mensual: "+moneda + " " + planSeleccionado.prima.toLocaleString()}
-            titleTypographyProps={{ align: "center" ,color:theme.palette.primary.main}}
-            />
-            <CardContent>
-             
-            <Typography variant="body1" color={theme.palette.secondary.main}>
-              Suma Asegurada: {moneda} <strong>{planSeleccionado.sumaAsegurada.toLocaleString()}</strong>
-            </Typography>
-           
-          </CardContent>
-          </Card>}
-          
+          {planSeleccionado.id > 0 && (
+            <Card>
+              <CardHeader
+                title={planSeleccionado.nombre}
+                subheader={
+                  "Prima mensual: " +
+                  moneda +
+                  " " +
+                  planSeleccionado.prima.toLocaleString()
+                }
+                titleTypographyProps={{
+                  align: "center",
+                  color: theme.palette.primary.main,
+                }}
+              />
+              <CardContent>
+                <Typography
+                  variant="body1"
+                  color={theme.palette.secondary.main}
+                >
+                  Suma Asegurada: {moneda}{" "}
+                  <strong>
+                    {planSeleccionado.sumaAsegurada.toLocaleString()}
+                  </strong>
+                </Typography>
+              </CardContent>
+            </Card>
+          )}
         </Grid>
 
         <Grid item xs={12} sm={12}>
@@ -363,21 +378,19 @@ useEffect(() => {
             </Grid>
           </>
         )}
-<Grid container mt={5} mb={5}>
-            
-            <Grid item xs={12}>
-                <Button onClick={handleClickOpen} variant='outlined'>Continuar</Button>
-                </Grid> 
-        
-            
-       </Grid>
-      
+        <Grid container mt={5} mb={5}>
+          <Grid item xs={12}>
+            <Button onClick={handleClickOpen} variant="outlined">
+              Continuar
+            </Button>
+          </Grid>
+        </Grid>
       </Grid>
       <Dialog
         open={open}
         onClose={handleClose}
         PaperProps={{
-          component: 'form',
+          component: "form",
           onSubmit: (event: React.FormEvent<HTMLFormElement>) => {
             event.preventDefault();
             const formData = new FormData(event.currentTarget);
@@ -391,26 +404,47 @@ useEffect(() => {
         <DialogTitle>Confirma tu información</DialogTitle>
         <DialogContent>
           <DialogContentText>
-           Confirma la información de tu solicitud y luego ingresa el código de verificación que te enviamos a tu correo electrónico.
+            Confirma la información de tu solicitud y luego ingresa el código de
+            verificación que te enviamos a tu correo electrónico.
           </DialogContentText>
 
           <br />
-          <Typography>Aporte: <strong>{moneda} {formData.aporte.toLocaleString()}</strong></Typography>
-          <Typography>Prima: <strong>{moneda} {planSeleccionado.prima}</strong></Typography>
-          
-          <Typography>Cuenta: <strong>{formData.cuenta}</strong></Typography>
-          <Typography>Suma Asegurada: <strong>{planSeleccionado.sumaAsegurada}</strong></Typography>
-          <Typography>Forma de Pago: <strong>{formData.formaPago}</strong></Typography>
-          {
-            formData.formaPago === "Débito a Tarjeta" && (
-              <>
-                <Typography>Número de Tarjeta: <strong>{formData.cardnumber}</strong></Typography>
-                <Typography>Fecha de Vencimiento: <strong>{formData.expiryDate}</strong></Typography>
-                <Typography>Fecha de Débito: <strong>{formData.diaDebito}</strong></Typography>
-              </>
-            )
-          }
-        
+          <Typography>
+            Aporte:{" "}
+            <strong>
+              {moneda} {formData.aporte.toLocaleString()}
+            </strong>
+          </Typography>
+          <Typography>
+            Prima:{" "}
+            <strong>
+              {moneda} {planSeleccionado.prima}
+            </strong>
+          </Typography>
+
+          <Typography>
+            Cuenta: <strong>{formData.cuenta}</strong>
+          </Typography>
+          <Typography>
+            Suma Asegurada: <strong>{planSeleccionado.sumaAsegurada}</strong>
+          </Typography>
+          <Typography>
+            Forma de Pago: <strong>{formData.formaPago}</strong>
+          </Typography>
+          {formData.formaPago === "Débito a Tarjeta" && (
+            <>
+              <Typography>
+                Número de Tarjeta: <strong>{formData.cardnumber}</strong>
+              </Typography>
+              <Typography>
+                Fecha de Vencimiento: <strong>{formData.expiryDate}</strong>
+              </Typography>
+              <Typography>
+                Fecha de Débito: <strong>{formData.diaDebito}</strong>
+              </Typography>
+            </>
+          )}
+
           <br />
           <TextField
             autoFocus
@@ -424,16 +458,13 @@ useEffect(() => {
             fullWidth
             variant="standard"
           />
-          
         </DialogContent>
         <DialogActions>
           <Button onClick={handleClose}>Cancelar</Button>
           <Button type="submit">Solicitar</Button>
         </DialogActions>
       </Dialog>
-      
     </form>
-    
   );
 };
 
