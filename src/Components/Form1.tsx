@@ -16,6 +16,12 @@ import {
   Slider,
   Box,
   CardContent,
+  Dialog,
+  DialogTitle,
+  DialogContentText,
+  DialogContent,
+  DialogActions,
+  Divider,
 } from "@mui/material";
 import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
@@ -62,7 +68,15 @@ const Form1: React.FC<Props> = (props) => {
   
   
   const [planSeleccionado,setPlanSeleccionado] = React.useState<Plan>(planes[0]);
-  
+  const [open, setOpen] = React.useState(false);
+
+  const handleClickOpen = () => {
+    setOpen(true);
+  };
+
+  const handleClose = () => {
+    setOpen(false);
+  };
 
   const filterPlanes = (prima:number) => {
     setPlanSeleccionado(
@@ -217,9 +231,11 @@ useEffect(() => {
             <CardHeader
             title={planSeleccionado.nombre}
             subheader={"Prima mensual: "+moneda + " " + planSeleccionado.prima.toLocaleString()}
+            titleTypographyProps={{ align: "center" ,color:theme.palette.primary.main}}
             />
             <CardContent>
-            <Typography variant="h6" color={theme.palette.secondary.main}>
+             
+            <Typography variant="body1" color={theme.palette.secondary.main}>
               Suma Asegurada: {moneda} <strong>{planSeleccionado.sumaAsegurada.toLocaleString()}</strong>
             </Typography>
            
@@ -347,10 +363,77 @@ useEffect(() => {
             </Grid>
           </>
         )}
-
-        {Navegador && <Navegador />}
+<Grid container mt={5} mb={5}>
+            
+            <Grid item xs={12}>
+                <Button onClick={handleClickOpen} variant='outlined'>Continuar</Button>
+                </Grid> 
+        
+            
+       </Grid>
+      
       </Grid>
+      <Dialog
+        open={open}
+        onClose={handleClose}
+        PaperProps={{
+          component: 'form',
+          onSubmit: (event: React.FormEvent<HTMLFormElement>) => {
+            event.preventDefault();
+            const formData = new FormData(event.currentTarget);
+            const formJson = Object.fromEntries((formData as any).entries());
+            const email = formJson.email;
+            console.log(email);
+            handleClose();
+          },
+        }}
+      >
+        <DialogTitle>Confirma tu información</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+           Confirma la información de tu solicitud y luego ingresa el código de verificación que te enviamos a tu correo electrónico.
+          </DialogContentText>
+
+          <br />
+          <Typography>Aporte: <strong>{moneda} {formData.aporte.toLocaleString()}</strong></Typography>
+          <Typography>Prima: <strong>{moneda} {planSeleccionado.prima}</strong></Typography>
+          
+          <Typography>Cuenta: <strong>{formData.cuenta}</strong></Typography>
+          <Typography>Suma Asegurada: <strong>{planSeleccionado.sumaAsegurada}</strong></Typography>
+          <Typography>Forma de Pago: <strong>{formData.formaPago}</strong></Typography>
+          {
+            formData.formaPago === "Débito a Tarjeta" && (
+              <>
+                <Typography>Número de Tarjeta: <strong>{formData.cardnumber}</strong></Typography>
+                <Typography>Fecha de Vencimiento: <strong>{formData.expiryDate}</strong></Typography>
+                <Typography>Fecha de Débito: <strong>{formData.diaDebito}</strong></Typography>
+              </>
+            )
+          }
+        
+          <br />
+          <TextField
+            autoFocus
+            required
+            margin="dense"
+            id="name"
+            name="email"
+            label="Código de verificación"
+            helperText="Ingresa el código que te enviamos a tu correo electrónico"
+            type="email"
+            fullWidth
+            variant="standard"
+          />
+          
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleClose}>Cancelar</Button>
+          <Button type="submit">Solicitar</Button>
+        </DialogActions>
+      </Dialog>
+      
     </form>
+    
   );
 };
 
