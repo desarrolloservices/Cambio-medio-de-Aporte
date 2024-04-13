@@ -461,7 +461,7 @@ const Form1: React.FC<Props> = (props) => {
         </DialogContent>
         <DialogActions>
           <Button onClick={handleClose}>Cancelar</Button>
-          <Button type="submit">Solicitar</Button>
+          <Button type="submit">Solicitar Ahora</Button>
         </DialogActions>
       </Dialog>
     </form>
