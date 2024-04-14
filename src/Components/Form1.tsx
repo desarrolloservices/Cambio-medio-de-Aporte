@@ -33,8 +33,9 @@ import MaskExpiry from "./MaskExpiry";
 import LocalOfferIcon from "@mui/icons-material/LocalOffer";
 import EastIcon from "@mui/icons-material/East";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
-import { Plan } from "../Interfaces/Tipos";
+import { Plan, cuenta } from "../Interfaces/Tipos";
 import { planes, planesDolares } from "../CustomData/Planes";
+import { cuentas } from "../CustomData/Cuentas";
 
 interface Props {
   // Propiedades del componente
@@ -62,12 +63,17 @@ const Form1: React.FC<Props> = (props) => {
   // Lógica del componente
   const { formData, handleInputChange, handleSelectChange, setFormData } =
     useContext(FormContext); // Use the FormContext
-  const cuentas = ["13242", "243242", "434343"];
+
   const [moneda, setMoneda] = useState("L");
 
   const [planSeleccionado, setPlanSeleccionado] = React.useState<Plan>(
     planes[0]
   );
+
+  const [cuentaSeleccionada, setCuentaSeleccionada] = React.useState<cuenta>(
+    cuentas[0]
+  );
+
   const [open, setOpen] = React.useState(false);
 
   const handleClickOpen = () => {
@@ -82,15 +88,39 @@ const Form1: React.FC<Props> = (props) => {
     setPlanSeleccionado(planes.filter((plan) => plan.prima === prima)[0]);
   };
 
+  const filterCuentas = (cuentaRecibida: string) => {
+    setCuentaSeleccionada(cuentas.filter((cuenta) => cuenta.cuenta === cuentaRecibida)[0]);
+  }
+
+  
   useEffect(() => {
     if (setFormData) {
       setFormData((prev) => ({
         ...prev,
         prima: planSeleccionado.prima,
         sumaAsegurada: planSeleccionado.sumaAsegurada,
+        cuenta: cuentaSeleccionada.cuenta,
+        moneda: cuentaSeleccionada.moneda,
+        aporte: cuentaSeleccionada.aporte,
       }));
     }
-  }, [planSeleccionado]);
+    setMoneda(cuentaSeleccionada.moneda);
+  },);
+
+  useEffect(() => {
+    if (setFormData) {
+      setFormData((prev) => ({
+        ...prev,
+        prima: planSeleccionado.prima,
+        sumaAsegurada: planSeleccionado.sumaAsegurada,
+        cuenta: cuentaSeleccionada.cuenta,
+        moneda: cuentaSeleccionada.moneda,
+      }));
+    }
+    setMoneda(cuentaSeleccionada.moneda);
+  }, [planSeleccionado,cuentaSeleccionada]);
+
+
 
   return (
     <form>
@@ -104,7 +134,7 @@ const Form1: React.FC<Props> = (props) => {
               required
               name="cuenta"
               label="Selecciona tu cuenta"
-              onChange={handleSelectChange}
+              onChange={(e, value) => filterCuentas(e.target.value as string)}
               value={formData.cuenta}
               inputProps={{
                 startAdornment: (
@@ -116,8 +146,8 @@ const Form1: React.FC<Props> = (props) => {
             >
               {cuentas.map((cuenta) => {
                 return (
-                  <MenuItem value={cuenta} key={cuenta}>
-                    {cuenta}
+                  <MenuItem value={cuenta.cuenta} key={cuenta.cuenta}>
+                    {cuenta.cuenta}
                   </MenuItem>
                 );
               })}
@@ -145,6 +175,7 @@ const Form1: React.FC<Props> = (props) => {
             }}
             max={100000}
             min={0}
+            value={formData.aporte}
             thousandSeparator={true}
             InputProps={{
               startAdornment: (
