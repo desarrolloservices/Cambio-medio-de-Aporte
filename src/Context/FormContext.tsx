@@ -4,6 +4,7 @@ import React, { createContext, useState } from "react";
 // Definir el tipo de los datos del formulario
 export interface FormData {
   aporte: number;
+  aporte_nuevo:number;
   primerNombre: string;
   segundoNombre: string;
   primerApellido: string;
@@ -17,6 +18,7 @@ export interface FormData {
   prima: number;
   cuenta: string;
   sumaAsegurada: number;
+  banco:string;
 }
 
 export interface FormContextProps {
@@ -45,6 +47,7 @@ const FormProvider: React.FC<{ children: React.ReactNode }> = ({
   const [activeStep, setActiveStep] = useState(0);
   const [formData, setFormData] = useState({
     aporte: 0,
+    aporte_nuevo:0,
     primerNombre: "",
     segundoNombre: "",
     primerApellido: "",
@@ -53,16 +56,18 @@ const FormProvider: React.FC<{ children: React.ReactNode }> = ({
     numeroIdentificacion: "",
     cardnumber: "",
     formaPago: "",
-    diaDebito: "",
+    diaDebito: "15",
     expiryDate: "", 
     prima: 0,
     cuenta: "",
     sumaAsegurada: 0,
+    banco:""
   });
 
   const handleInputChange = (event: any) => {
     console.log("Input Changging...");
-    console.log(event.target.value);
+    
+    console.log(formData);
     const { name, value } = event.target;
     setFormData((prevFormData) => ({
       ...prevFormData,

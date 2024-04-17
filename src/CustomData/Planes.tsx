@@ -11,13 +11,13 @@ export const planes: Plan[] = [
       id: 1,
       nombre: "Plan A",
       prima: 34,
-      sumaAsegurada: 1000000,
+      sumaAsegurada: 100000,
     },
     {
       id: 2,
       nombre: "Plan B",
       prima: 100,
-      sumaAsegurada: 3000000,
+      sumaAsegurada: 300000,
     },
     {
       id: 3,
@@ -95,3 +95,5 @@ export const planes: Plan[] = [
       sumaAsegurada: 122500,
     },
   ];
+
+  export const Bancos =["Banco Atlántida","Bac Honduras","Banco Ficohsa","Banco de Occidente","Banco del País"]

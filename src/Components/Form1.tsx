@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useContext, useEffect, useRef, useState } from "react";
 import {
   TextField,
   Button,
@@ -34,9 +34,12 @@ import LocalOfferIcon from "@mui/icons-material/LocalOffer";
 import EastIcon from "@mui/icons-material/East";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { Plan, cuenta } from "../Interfaces/Tipos";
-import { planes, planesDolares } from "../CustomData/Planes";
+import { planes, planesDolares, Bancos } from "../CustomData/Planes";
 import { cuentas } from "../CustomData/Cuentas";
-
+import LoyaltyIcon from '@mui/icons-material/Loyalty';
+import CreditScoreRoundedIcon from '@mui/icons-material/CreditScoreRounded';
+import SavingsRoundedIcon from '@mui/icons-material/SavingsRounded';
+import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
 interface Props {
   // Propiedades del componente
 }
@@ -61,6 +64,8 @@ const theme = createTheme({
 
 const Form1: React.FC<Props> = (props) => {
   // Lógica del componente
+  const ref = useRef(null);
+  const inputRef = useRef(null);
   const { formData, handleInputChange, handleSelectChange, setFormData } =
     useContext(FormContext); // Use the FormContext
 
@@ -94,6 +99,7 @@ const Form1: React.FC<Props> = (props) => {
 
   
   useEffect(() => {
+    console.log("Cuenta seleccionada: ", cuentaSeleccionada);
     if (setFormData) {
       setFormData((prev) => ({
         ...prev,
@@ -105,9 +111,10 @@ const Form1: React.FC<Props> = (props) => {
       }));
     }
     setMoneda(cuentaSeleccionada.moneda);
-  },);
+  },[]);
 
   useEffect(() => {
+    console.log("Cambiando plan seleccionado");
     if (setFormData) {
       setFormData((prev) => ({
         ...prev,
@@ -136,13 +143,12 @@ const Form1: React.FC<Props> = (props) => {
               label="Selecciona tu cuenta"
               onChange={(e, value) => filterCuentas(e.target.value as string)}
               value={formData.cuenta}
-              inputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <EastIcon />
-                  </InputAdornment>
-                ),
-              }}
+              startAdornment={
+                <InputAdornment position="start">
+                  <SavingsRoundedIcon sx={{color:theme.palette.primary.main}}/>
+                </InputAdornment>
+              }
+
             >
               {cuentas.map((cuenta) => {
                 return (
@@ -154,8 +160,10 @@ const Form1: React.FC<Props> = (props) => {
             </Select>
           </FormControl>
         </Grid>
-        <Grid item xs={12} sm={12}>
-          <Typography
+
+        {/* APORTE */}
+        <Grid item xs={12} mb={-2}>
+        <Typography
             align="justify"
             variant="h6"
             color={theme.palette.secondary.main}
@@ -163,12 +171,15 @@ const Form1: React.FC<Props> = (props) => {
             Incrementa tu aporte:
           </Typography>
           <br />
+        </Grid>
+        <Grid item xs={6} sm={6}>
+          
           <NumericFormat
             required
             name="aporte"
             customInput={TextField}
             onChange={handleInputChange}
-            label="Monto del Aporte"
+            label="Aporte Actual"
             isAllowed={(values) => {
               const { floatValue } = values;
               return floatValue !== undefined && floatValue <= 100000;
@@ -176,6 +187,37 @@ const Form1: React.FC<Props> = (props) => {
             max={100000}
             min={0}
             value={formData.aporte}
+            thousandSeparator={true}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">{moneda}</InputAdornment>
+              ),
+
+              inputProps: { min: 0, max: 1000000 },
+            }}
+            fullWidth
+            disabled
+          />
+        </Grid>
+        <Grid item xs={6} sm={6}>
+          
+          <NumericFormat
+            required
+            name="aporte_nuevo"
+            customInput={TextField}
+            onChange={handleInputChange}
+            label="Aporte Nuevo"
+            helperText="Ingreso tu nuevo aporte aquí"
+            FormHelperTextProps={{
+              color: "green",
+            }}
+            isAllowed={(values) => {
+              const { floatValue } = values;
+              return floatValue !== undefined && floatValue <= 100000;
+            }}
+            max={100000}
+            min={0}
+            value={formData.aporte_nuevo}
             thousandSeparator={true}
             InputProps={{
               startAdornment: (
@@ -200,13 +242,13 @@ const Form1: React.FC<Props> = (props) => {
             gap={1}
             mb={2}
           >
-            <LocalOfferIcon color="primary" fontSize="small" />
+            {/* <LoyaltyIcon color="primary" fontSize="small" /> */}
             <Typography variant="h6" color={theme.palette.secondary.main}>
               Adquiere tu seguro de vida opcional:
             </Typography>
           </Grid>
 
-          <Box
+          {/* <Box
             sx={{
               width: "90%",
               textAlign: "center",
@@ -232,11 +274,11 @@ const Form1: React.FC<Props> = (props) => {
               valueLabelDisplay="auto"
               sx={{ display: { xs: "none", md: "block" } }}
             />
-          </Box>
+          </Box> */}
           <Box mb={2}>
             <FormControl
               fullWidth
-              sx={{ display: { xs: "block", md: "none" } }}
+              
             >
               <InputLabel>Prima que pagarías</InputLabel>
               <Select
@@ -247,6 +289,11 @@ const Form1: React.FC<Props> = (props) => {
                 onChange={(event) => {
                   filterPlanes(event.target.value as number);
                 }}
+                startAdornment={
+                  <InputAdornment position="start">
+                    <LoyaltyIcon sx={{color:theme.palette.primary.main}}/>
+                  </InputAdornment>
+                }
                 sx={{ width: "100%" }}
               >
                 {planes.map((plan) => {
@@ -254,7 +301,7 @@ const Form1: React.FC<Props> = (props) => {
                     <MenuItem
                       value={plan.prima}
                       key={plan.prima}
-                    >{`${plan.nombre} - ${moneda} ${plan.prima}`}</MenuItem>
+                    >{`${plan.nombre}     Suma Asegurada: ${moneda} ${plan.sumaAsegurada.toLocaleString()}`}</MenuItem>
                   );
                 })}
               </Select>
@@ -263,19 +310,20 @@ const Form1: React.FC<Props> = (props) => {
           {planSeleccionado.id > 0 && (
             <Card>
               <CardHeader
-                title={planSeleccionado.nombre}
+                title={"Seleccionastes el "+planSeleccionado.nombre}
                 subheader={
-                  "Prima mensual: " +
+                  "Pagarás una prima mensual de " +
                   moneda +
                   " " +
-                  planSeleccionado.prima.toLocaleString()
+                  planSeleccionado.prima.toLocaleString()+" y tendrás una suma asegurada de "+moneda+" "+planSeleccionado.sumaAsegurada.toLocaleString()
                 }
+                sx={{ backgroundColor: "#EFF1F3" }}
                 titleTypographyProps={{
                   align: "center",
                   color: theme.palette.primary.main,
                 }}
               />
-              <CardContent>
+              {/* <CardContent>
                 <Typography
                   variant="body1"
                   color={theme.palette.secondary.main}
@@ -285,7 +333,7 @@ const Form1: React.FC<Props> = (props) => {
                     {planSeleccionado.sumaAsegurada.toLocaleString()}
                   </strong>
                 </Typography>
-              </CardContent>
+              </CardContent> */}
             </Card>
           )}
         </Grid>
@@ -329,7 +377,7 @@ const Form1: React.FC<Props> = (props) => {
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
-                      <CreditCardIcon />
+                      <CreditCardIcon sx={{color:theme.palette.primary.main}} />
                     </InputAdornment>
                   ),
                 }}
@@ -344,14 +392,13 @@ const Form1: React.FC<Props> = (props) => {
                   label="Fecha de vencimiento"
                   placeholder="MM / YY"
                   variant="outlined"
+                  ref={ref}
+  inputRef={inputRef}  
+                  
                   value={formData.expiryDate}
                   name="expiryDate"
-                  onChange={
-                    (e) =>
-                      //setState({ ...state, expiry: e.target.value })
-                      console.log("Cambiando fecha de vencimiento")
-                    //IMask.onChange={console.log("Cambiando fecha de vencimiento")}
-                  }
+
+                  
                   fullWidth
                 />
               </FormControl>
@@ -368,8 +415,6 @@ const Form1: React.FC<Props> = (props) => {
                   defaultValue="15"
                 >
                   {[
-                    "0",
-                    "1",
                     "2",
                     "3",
                     "4",
@@ -407,6 +452,36 @@ const Form1: React.FC<Props> = (props) => {
                 </Select>
               </FormControl>
             </Grid>
+            <Grid item xs={12} sm={12}>
+         
+         
+          <FormControl fullWidth>
+            <InputLabel>Banco Emisor</InputLabel>
+            <Select
+              multiple={false}
+              label="Banco Emisor"
+              name="banco"
+              value={formData.banco}
+              onChange={handleSelectChange}
+              startAdornment={
+                <InputAdornment position="start">
+                  <AccountBalanceIcon sx={{color:theme.palette.primary.main}}/>
+                </InputAdornment>
+              }
+            >
+              {
+                Bancos.map((banco) => {
+                  return (
+                    <MenuItem value={banco} key={banco}>
+                      {banco}
+                    </MenuItem>
+                  );
+                })
+              }
+              
+            </Select>
+          </FormControl>
+        </Grid>
           </>
         )}
         <Grid container mt={5} mb={5}>
