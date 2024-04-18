@@ -557,11 +557,10 @@ const Form1: React.FC<Props> = (props) => {
           },
         }}
       >
-        <DialogTitle>Confirma tu información</DialogTitle>
+        <DialogTitle>Confirma tu gestión</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            Confirma la información de tu solicitud y luego ingresa el código de
-            verificación que te enviamos a tu correo electrónico.
+          Confirma la información de tu solicitud y luego ingresa el código de verificación que te enviamos a tu correo electrónico.
           </DialogContentText>
 
           <br />
@@ -617,7 +616,7 @@ const Form1: React.FC<Props> = (props) => {
         </DialogContent>
         <DialogActions>
           <Button onClick={handleClose}>Cancelar</Button>
-          <Button type="submit">Solicitar Ahora</Button>
+          <Button type="submit">Enviar</Button>
         </DialogActions>
       </Dialog>
     </form>
