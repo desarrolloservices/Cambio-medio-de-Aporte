@@ -119,11 +119,14 @@ const AppContent: React.FC = () => {
             </Grid>
             <Grid item xs={12} mb={3}>
               <Typography variant="body1" color={theme.palette.secondary.main}>
-                Incrementa tu aporte mensual y para tu comodidad, afílialo a un
-                medio automático con tarjeta de crédito o débito.
+              ¡Haz crecer tu patrimonio! Incrementa tu aporte mensual y asegura un mañana próspero para ti y tu familia. Cada paso cuenta en el camino hacia tus metas financieras, en el presente y futuro, Tu mejora Aliado, eres Tú.
+Para tu comodidad, afilia tu aporte a un medio automático con tu tarjeta de crédito o débito.
+ 
+
               </Typography>
+              <br />
               <Typography variant="body1" color={theme.palette.secondary.main}>
-                Este formulario estará disponible para las próximas 48 horas.
+              Nota: Este formulario estará disponible durante las próximas 48 horas.  ¡No pierdas la oportunidad de mejorar tu futuro!
               </Typography>
             </Grid>
           </Grid>

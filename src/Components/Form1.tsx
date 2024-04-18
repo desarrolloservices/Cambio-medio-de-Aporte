@@ -21,7 +21,10 @@ import {
   DialogContent,
   DialogActions,
   Divider,
+  Input,
+  OutlinedInput,
 } from "@mui/material";
+
 import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { FormContext } from "../Context/FormContext"; // Import the FormContext
@@ -40,6 +43,11 @@ import LoyaltyIcon from '@mui/icons-material/Loyalty';
 import CreditScoreRoundedIcon from '@mui/icons-material/CreditScoreRounded';
 import SavingsRoundedIcon from '@mui/icons-material/SavingsRounded';
 import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
+import UpdateIcon from '@mui/icons-material/Update';
+import InputMask from 'react-input-mask';
+import { TextInputMask } from "react-native-masked-text";
+import { IMaskInput } from "react-imask";
+
 interface Props {
   // Propiedades del componente
 }
@@ -61,6 +69,29 @@ const theme = createTheme({
     borderRadius: 13,
   },
 });
+
+interface CustomProps {
+  onChange: (event: { target: { name: string; value: string } }) => void;
+  name: string;
+}
+
+const TextMaskCustom = React.forwardRef<HTMLInputElement, CustomProps>(
+  function TextMaskCustom(props, ref) {
+    const { onChange, ...other } = props;
+    return (
+      <IMaskInput
+        {...other}
+        mask="00/00"
+        definitions={{
+          '#': /[1-9]/,
+        }}
+        inputRef={ref}
+        onAccept={(value: any) => onChange({ target: { name: props.name, value } })}
+        overwrite
+      />
+    );
+  },
+);
 
 const Form1: React.FC<Props> = (props) => {
   // Lógica del componente
@@ -107,7 +138,7 @@ const Form1: React.FC<Props> = (props) => {
         sumaAsegurada: planSeleccionado.sumaAsegurada,
         cuenta: cuentaSeleccionada.cuenta,
         moneda: cuentaSeleccionada.moneda,
-        aporte: cuentaSeleccionada.aporte,
+        aporte: cuentaSeleccionada.aporte.toString(),
       }));
     }
     setMoneda(cuentaSeleccionada.moneda);
@@ -196,7 +227,7 @@ const Form1: React.FC<Props> = (props) => {
               inputProps: { min: 0, max: 1000000 },
             }}
             fullWidth
-            disabled
+     
           />
         </Grid>
         <Grid item xs={6} sm={6}>
@@ -312,15 +343,16 @@ const Form1: React.FC<Props> = (props) => {
               <CardHeader
                 title={"Seleccionastes el "+planSeleccionado.nombre}
                 subheader={
-                  "Pagarás una prima mensual de " +
+                  "Prima Mensual " +
                   moneda +
                   " " +
-                  planSeleccionado.prima.toLocaleString()+" y tendrás una suma asegurada de "+moneda+" "+planSeleccionado.sumaAsegurada.toLocaleString()
+                  planSeleccionado.prima.toLocaleString()+" y Suma Asegurada "+moneda+" "+planSeleccionado.sumaAsegurada.toLocaleString()
                 }
                 sx={{ backgroundColor: "#EFF1F3" }}
                 titleTypographyProps={{
                   align: "center",
                   color: theme.palette.primary.main,
+                  fontSize: "1.2rem",
                 }}
               />
               {/* <CardContent>
@@ -354,8 +386,14 @@ const Form1: React.FC<Props> = (props) => {
               multiple={false}
               label="Forma de Pago"
               name="formaPago"
+              defaultValue="Carné"
               value={formData.formaPago}
               onChange={handleSelectChange}
+              startAdornment={
+                <InputAdornment position="start">
+                  <UpdateIcon sx={{color:theme.palette.primary.main}}/>
+                </InputAdornment>
+              }
             >
               <MenuItem value="Carné">Carné</MenuItem>
               <MenuItem value="Débito a Tarjeta">Débito a Tarjeta</MenuItem>
@@ -387,7 +425,7 @@ const Form1: React.FC<Props> = (props) => {
 
             <Grid item xs={6} sm={3}>
               <FormControl>
-                <MaskExpiry
+                {/* <MaskExpiry
                   id="expiryDate"
                   label="Fecha de vencimiento"
                   placeholder="MM / YY"
@@ -400,7 +438,17 @@ const Form1: React.FC<Props> = (props) => {
 
                   
                   fullWidth
-                />
+                /> */}
+                <OutlinedInput
+          
+          value={formData.expiryDate}
+          onChange={handleInputChange}
+          placeholder="MM/YY"
+          name="expiryDate"
+          id="expiryDate"
+          
+          inputComponent={TextMaskCustom as any}
+        />
               </FormControl>
             </Grid>
             <Grid item xs={6} sm={3}>

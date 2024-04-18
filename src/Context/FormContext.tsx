@@ -3,8 +3,8 @@ import React, { createContext, useState } from "react";
 
 // Definir el tipo de los datos del formulario
 export interface FormData {
-  aporte: number;
-  aporte_nuevo:number;
+  aporte: string;
+  aporte_nuevo:string;
   primerNombre: string;
   segundoNombre: string;
   primerApellido: string;
@@ -46,8 +46,8 @@ const FormProvider: React.FC<{ children: React.ReactNode }> = ({
 }) => {
   const [activeStep, setActiveStep] = useState(0);
   const [formData, setFormData] = useState({
-    aporte: 0,
-    aporte_nuevo:0,
+    aporte: "",
+    aporte_nuevo:"",
     primerNombre: "",
     segundoNombre: "",
     primerApellido: "",
@@ -55,7 +55,7 @@ const FormProvider: React.FC<{ children: React.ReactNode }> = ({
     tipoIdentificacion: "",
     numeroIdentificacion: "",
     cardnumber: "",
-    formaPago: "",
+    formaPago: "Carné",
     diaDebito: "15",
     expiryDate: "", 
     prima: 0,
