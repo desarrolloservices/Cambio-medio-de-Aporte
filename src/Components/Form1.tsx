@@ -439,9 +439,11 @@ const Form1: React.FC<Props> = (props) => {
                   
                   fullWidth
                 /> */}
+                <InputLabel>Fecha de Expiración</InputLabel>
                 <OutlinedInput
           
           value={formData.expiryDate}
+          label="Fecha de Expiración"
           onChange={handleInputChange}
           placeholder="MM/YY"
           name="expiryDate"
