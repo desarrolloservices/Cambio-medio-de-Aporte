@@ -227,7 +227,7 @@ const Form1: React.FC<Props> = (props) => {
               inputProps: { min: 0, max: 1000000 },
             }}
             fullWidth
-     
+            disabled
           />
         </Grid>
         <Grid item xs={6} sm={6}>
