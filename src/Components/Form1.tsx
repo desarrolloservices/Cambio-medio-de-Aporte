@@ -47,6 +47,11 @@ import UpdateIcon from '@mui/icons-material/Update';
 import InputMask from 'react-input-mask';
 import { TextInputMask } from "react-native-masked-text";
 import { IMaskInput } from "react-imask";
+import useTwilio from "../Hooks/UseTwlo";
+import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
+import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
+import CircularProgress from '@mui/material/CircularProgress';
+import { wait } from "@testing-library/user-event/dist/utils";
 
 interface Props {
   // Propiedades del componente
@@ -93,11 +98,13 @@ const TextMaskCustom = React.forwardRef<HTMLInputElement, CustomProps>(
   },
 );
 
+<Input />
 const Form1: React.FC<Props> = (props) => {
   // Lógica del componente
-  const ref = useRef(null);
-  const inputRef = useRef(null);
-  const { formData, handleInputChange, handleSelectChange, setFormData } =
+  const [code, setCode] = useState("");
+  const {enviarCode,enviandoCode,validarCode,confirmado,validandoCode,confirmadoError,setValidandoCode} = useTwilio();
+
+  const { formData, handleInputChange, handleSelectChange, setFormData, } =
     useContext(FormContext); // Use the FormContext
 
   const [moneda, setMoneda] = useState("L");
@@ -128,6 +135,22 @@ const Form1: React.FC<Props> = (props) => {
     setCuentaSeleccionada(cuentas.filter((cuenta) => cuenta.cuenta === cuentaRecibida)[0]);
   }
 
+  const handleCODE = (codigo:string)=>{
+    setCode(codigo);
+    const largo = codigo.length;
+    
+    if (largo===6){
+      setValidandoCode(true);
+      //validarCode("+50499787930",codigo);
+      console.log("6 Caracteres")
+    }
+    wait(3000).then(()=>{
+      setValidandoCode(false);
+      setCode("")
+    });
+   
+
+  }
   
   useEffect(() => {
     console.log("Cuenta seleccionada: ", cuentaSeleccionada);
@@ -606,17 +629,42 @@ const Form1: React.FC<Props> = (props) => {
             required
             margin="dense"
             id="name"
-            name="email"
+            name="code"
             label="Código de verificación"
+            value={code}
+            placeholder={"000000"}
             helperText="Ingresa el código que te enviamos a tu correo electrónico"
-            type="email"
+            type="tel"
             fullWidth
             variant="standard"
+            sx={{
+              "& input::-webkit-outer-spin-button, & input::-webkit-inner-spin-button": {
+                                       display: "none",
+                                     },
+             "& input[type=number]": {
+                                       MozAppearance: "textfield",
+                                     },
+             }}
+             inputProps={{maxLength:6}}
+            InputProps={{
+              endAdornment: (
+                <InputAdornment position='start'>
+                  {confirmadoError && !confirmado && <ErrorOutlineIcon sx={{color:theme.palette.primary.main}} />}
+                  {confirmado && !confirmadoError && <CheckCircleOutlineIcon sx={{color:"green"}} />}
+                  {validandoCode && <CircularProgress color="inherit" size={15}/> }
+                  
+                </InputAdornment>
+              ),
+              
+            }}
+            onChange={(e)=>handleCODE((e.target as HTMLInputElement).value)}
           />
         </DialogContent>
         <DialogActions>
           <Button onClick={handleClose}>Cancelar</Button>
-          <Button type="submit">Enviar</Button>
+          <Button onClick={()=>enviarCode("+50499787930")} disabled={enviandoCode}>Enviar código</Button>
+          
+          <Button type="submit" disabled={!confirmado}>Enviar</Button>
         </DialogActions>
       </Dialog>
     </form>
