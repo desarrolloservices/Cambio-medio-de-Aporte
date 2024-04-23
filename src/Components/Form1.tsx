@@ -141,7 +141,7 @@ const Form1: React.FC<Props> = (props) => {
     
     if (largo===6){
       setValidandoCode(true);
-      //validarCode("+50499787930",codigo);
+      validarCode("+50499787930",codigo);
       console.log("6 Caracteres")
     }
     wait(3000).then(()=>{
