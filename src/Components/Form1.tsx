@@ -23,6 +23,7 @@ import {
   Divider,
   Input,
   OutlinedInput,
+  Stack,
 } from "@mui/material";
 
 import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
@@ -35,7 +36,7 @@ import CreditCardIcon from "@mui/icons-material/CreditCard";
 import MaskExpiry from "./MaskExpiry";
 import LocalOfferIcon from "@mui/icons-material/LocalOffer";
 import EastIcon from "@mui/icons-material/East";
-import { DataGrid, GridColDef } from "@mui/x-data-grid";
+import { DataGrid, GridColDef, GridRenderCellParams } from "@mui/x-data-grid";
 import { Plan, cuenta } from "../Interfaces/Tipos";
 import { planes, planesDolares, Bancos } from "../CustomData/Planes";
 import { cuentas } from "../CustomData/Cuentas";
@@ -75,6 +76,8 @@ const theme = createTheme({
   },
 });
 
+
+
 interface CustomProps {
   onChange: (event: { target: { name: string; value: string } }) => void;
   name: string;
@@ -100,6 +103,98 @@ const TextMaskCustom = React.forwardRef<HTMLInputElement, CustomProps>(
 
 <Input />
 const Form1: React.FC<Props> = (props) => {
+
+  const rawData = [
+    {
+      "ID": 9395,
+      "Tarjeta": "4009501009683871",
+      "DiaDebito": "16",
+      "TipoDebito": { "Value": "UNICO" }
+    },
+    {
+      "ID": 9396,
+      "Tarjeta": "4009501009683871",
+      "DiaDebito": "16",
+      "TipoDebito": { "Value": "MENSUAL" }
+    }
+  ];
+
+  const maskCardNumber = (cardNumber: string) => {
+    return `•••• •••• •••• ${cardNumber.slice(-4)}`;
+  };
+  const handleEdit = (row: any) => {
+    alert(`Editing: ${JSON.stringify(row, null, 2)}`);
+  };
+
+// Function to handle delete action
+const handleDelete = (row: any) => {
+  alert(`Deleting: ${row.ID}`);
+};
+  
+
+  // Function to clean HTML tags from the Identidad field
+const cleanHTML = (htmlString: string) => {
+  const tempElement = document.createElement("div");
+  tempElement.innerHTML = htmlString;
+  return tempElement.textContent || tempElement.innerText || "";
+};
+
+// Define the columns
+// Define the columns
+const columns: GridColDef[] = [
+  { 
+    field: "Tarjeta", 
+    headerName: "Tarjeta", 
+    flex: 1, // Makes the column fill space dynamically
+    minWidth: 200,
+    valueGetter: (params) => maskCardNumber(params.row.Tarjeta) 
+  },
+  { 
+    field: "DiaDebito", 
+    headerName: "Día Débito", 
+    flex: 1, 
+    minWidth: 120 
+  },
+  { 
+    field: "TipoDebito", 
+    headerName: "Tipo Débito", 
+    flex: 1, 
+    minWidth: 150, 
+    valueGetter: (params) => params.row.TipoDebito.Value 
+  },
+  {
+    field: "actions",
+    headerName: "Actions",
+    flex: 1,
+    minWidth: 200,
+    sortable: false,
+    renderCell: (params: GridRenderCellParams) => (
+      <Stack direction="row" spacing={1} justifyContent="flex-end" width="100%">
+        <Button
+          variant="contained"
+          color="primary"
+          size="small"
+          onClick={() => handleEdit(params.row)}
+        >
+          Edit
+        </Button>
+        <Button
+          variant="contained"
+          color="secondary"
+          size="small"
+          onClick={() => handleDelete(params.row)}
+        >
+          Delete
+        </Button>
+      </Stack>
+    ),
+  },
+];
+  // Temp demo data
+
+
+
+
   // Lógica del componente
   const [code, setCode] = useState("");
   const {enviarCode,enviandoCode,validarCode,confirmado,validandoCode,confirmadoError,setValidandoCode} = useTwilio();
@@ -268,6 +363,29 @@ const Form1: React.FC<Props> = (props) => {
         </Grid>
 
         <Grid item xs={12} sm={12}>
+        <Typography
+            variant="h6"
+            align="justify"
+            color={theme.palette.secondary.main}
+          >
+            Tus medios de pago:
+          </Typography>
+          <Box sx={{ width: "100%", display: "flex", justifyContent: "center" }}>
+      <DataGrid
+        rows={rawData}
+        columns={columns}
+        getRowId={(row) => row.ID} // Using ID as unique key
+        autoHeight // Fixes bottom blank space issue
+        disableColumnMenu // Hides unnecessary column settings
+        disableRowSelectionOnClick // Prevents row selection when clicking buttons
+        hideFooterPagination={rawData.length <= 5} // Hides pagination if rows are 5 or less
+        pageSizeOptions={[5, 10]}
+      />
+    </Box>
+          </Grid>
+
+
+    <Grid item xs={12} sm={12}>
           <Typography
             variant="h6"
             align="justify"
