@@ -114,7 +114,7 @@ const AppContent: React.FC = () => {
             </Grid>
             <Grid item xs={12} mb={3}>
               <Typography variant="h5" color={theme.palette.secondary.main}>
-                Estimado(a): <strong>DEMO</strong>
+                Estimado(a): <strong>Jose Eduardo Villalobos Godoy</strong>
               </Typography>
             </Grid>
             <Grid item xs={12} mb={3}>

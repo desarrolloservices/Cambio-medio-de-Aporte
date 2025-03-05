@@ -216,73 +216,9 @@ const Form1: React.FC<Props> = (props) => {
         </Grid>
 
         {/* APORTE */}
-        <Grid item xs={12} mb={-2}>
-        <Typography
-            align="justify"
-            variant="h6"
-            color={theme.palette.secondary.main}
-          >
-            Incrementa tu aporte:
-          </Typography>
-          <br />
-        </Grid>
-        <Grid item xs={6} sm={6}>
-          
-          <NumericFormat
-            required
-            name="aporte"
-            customInput={TextField}
-            onChange={handleInputChange}
-            label="Aporte Actual"
-            isAllowed={(values) => {
-              const { floatValue } = values;
-              return floatValue !== undefined && floatValue <= 100000;
-            }}
-            max={100000}
-            min={0}
-            value={formData.aporte}
-            thousandSeparator={true}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">{moneda}</InputAdornment>
-              ),
-
-              inputProps: { min: 0, max: 1000000 },
-            }}
-            fullWidth
-            disabled
-          />
-        </Grid>
-        <Grid item xs={6} sm={6}>
-          
-          <NumericFormat
-            required
-            name="aporte_nuevo"
-            customInput={TextField}
-            onChange={handleInputChange}
-            label="Aporte Nuevo"
-            helperText="Ingreso tu nuevo aporte aquí"
-            FormHelperTextProps={{
-              color: "green",
-            }}
-            isAllowed={(values) => {
-              const { floatValue } = values;
-              return floatValue !== undefined && floatValue <= 100000;
-            }}
-            max={100000}
-            min={0}
-            value={formData.aporte_nuevo}
-            thousandSeparator={true}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">{moneda}</InputAdornment>
-              ),
-
-              inputProps: { min: 0, max: 1000000 },
-            }}
-            fullWidth
-          />
-        </Grid>
+       
+        
+        
 
         <Grid item xs={12}>
           <Grid
@@ -297,9 +233,7 @@ const Form1: React.FC<Props> = (props) => {
             mb={2}
           >
             {/* <LoyaltyIcon color="primary" fontSize="small" /> */}
-            <Typography variant="h6" color={theme.palette.secondary.main}>
-              Adquiere tu seguro de vida opcional:
-            </Typography>
+   
           </Grid>
 
           {/* <Box
@@ -329,68 +263,8 @@ const Form1: React.FC<Props> = (props) => {
               sx={{ display: { xs: "none", md: "block" } }}
             />
           </Box> */}
-          <Box mb={2}>
-            <FormControl
-              fullWidth
-              
-            >
-              <InputLabel>Prima que pagarías</InputLabel>
-              <Select
-                multiple={false}
-                label="Selecciona tu plan"
-                name="plan"
-                defaultValue={0}
-                onChange={(event) => {
-                  filterPlanes(event.target.value as number);
-                }}
-                startAdornment={
-                  <InputAdornment position="start">
-                    <LoyaltyIcon sx={{color:theme.palette.primary.main}}/>
-                  </InputAdornment>
-                }
-                sx={{ width: "100%" }}
-              >
-                {planes.map((plan) => {
-                  return (
-                    <MenuItem
-                      value={plan.prima}
-                      key={plan.prima}
-                    >{`${plan.nombre}     Suma Asegurada: ${moneda} ${plan.sumaAsegurada.toLocaleString()}`}</MenuItem>
-                  );
-                })}
-              </Select>
-            </FormControl>
-          </Box>
-          {planSeleccionado.id > 0 && (
-            <Card>
-              <CardHeader
-                title={"Seleccionastes el "+planSeleccionado.nombre}
-                subheader={
-                  "Prima Mensual " +
-                  moneda +
-                  " " +
-                  planSeleccionado.prima.toLocaleString()+" y Suma Asegurada "+moneda+" "+planSeleccionado.sumaAsegurada.toLocaleString()
-                }
-                sx={{ backgroundColor: "#EFF1F3" }}
-                titleTypographyProps={{
-                  align: "center",
-                  color: theme.palette.primary.main,
-                  fontSize: "1.2rem",
-                }}
-              />
-              {/* <CardContent>
-                <Typography
-                  variant="body1"
-                  color={theme.palette.secondary.main}
-                >
-                  Suma Asegurada: {moneda}{" "}
-                  <strong>
-                    {planSeleccionado.sumaAsegurada.toLocaleString()}
-                  </strong>
-                </Typography>
-              </CardContent> */}
-            </Card>
-          )}
+          
+          
         </Grid>
 
         <Grid item xs={12} sm={12}>
