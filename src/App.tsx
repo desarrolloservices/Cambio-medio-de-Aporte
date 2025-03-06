@@ -61,6 +61,8 @@ function App() {
   );
 }
 
+
+
 const AppContent: React.FC = () => {
   const { setActiveStep, handleBack, handleNext, activeStep, formData } =
     useContext(FormContext);
@@ -73,6 +75,18 @@ const AppContent: React.FC = () => {
   useEffect(() => {
     if (setActiveStep) {
       setActiveStep(0);
+    }
+  }, []);
+
+  useEffect(() => {
+    // Get the tokenid from the URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const tokenid = urlParams.get("tokenid");
+  
+    if (tokenid) {
+      // Store the tokenid in localStorage
+      localStorage.setItem("tokenid", tokenid);
+      console.log("TokenID stored in localStorage:", tokenid);
     }
   }, []);
 
@@ -130,29 +144,9 @@ Para tu comodidad, afilia tu aporte a un medio autom√°tico con tu tarjeta de cr√
               </Typography>
             </Grid>
           </Grid>
-          {/* <Stepper
-            activeStep={activeStep}
-            alternativeLabel
-            sx={{ marginTop: "40px", marginBottom: "40px" }}
-          >
-            <Step>
-              <StepLabel>Ingresa tus datos</StepLabel>
-            </Step>
-            <Step>
-              <StepLabel>Valida tus datos</StepLabel>
-              </Step>
-            <Step>
-              <StepLabel>Confirmar</StepLabel>
-            </Step>
-          </Stepper> */}
+      
           <Form1 />
-          {/* {activeStep === 0 && <Form1 />}
-          {activeStep === 1 && (
-             <Form2 />
-          )}
-          {activeStep === 2 && (
-            <Form3 />
-          )} */}
+          {}
         </Container>
       </div>
     </div>

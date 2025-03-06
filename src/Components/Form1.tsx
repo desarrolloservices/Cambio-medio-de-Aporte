@@ -37,7 +37,7 @@ import MaskExpiry from "./MaskExpiry";
 import LocalOfferIcon from "@mui/icons-material/LocalOffer";
 import EastIcon from "@mui/icons-material/East";
 import { DataGrid, GridColDef, GridRenderCellParams } from "@mui/x-data-grid";
-import { Plan, cuenta } from "../Interfaces/Tipos";
+import { Plan, cuenta, infoCliente } from "../Interfaces/Tipos";
 import { planes, planesDolares, Bancos } from "../CustomData/Planes";
 import { cuentas } from "../CustomData/Cuentas";
 import LoyaltyIcon from '@mui/icons-material/Loyalty';
@@ -53,6 +53,7 @@ import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import CircularProgress from '@mui/material/CircularProgress';
 import { wait } from "@testing-library/user-event/dist/utils";
+import { InfoCliente } from "../Data/GetDatosClientes";
 
 interface Props {
   // Propiedades del componente
@@ -246,6 +247,21 @@ const columns: GridColDef[] = [
    
 
   }
+
+  useEffect(() => {
+    // Call InfoCliente.obtieneInfo()
+    InfoCliente.obtieneInfo()
+      .then((response) => {
+        // Type the response.data
+        const clientData = response.data as infoCliente;
+        // Log the data to the console
+        console.log("Client Data:", JSON.stringify(clientData));
+      })
+      .catch((error) => {
+        // Handle errors (log to console)
+        console.error("Error getting client data:", error);
+      });
+  }, []); 
   
   useEffect(() => {
     console.log("Cuenta seleccionada: ", cuentaSeleccionada);
