@@ -1,4 +1,5 @@
 import React, { useContext, useEffect, useState } from "react";
+
 import logo from "./Assets/logo.png";
 import "./App.css";
 import {
@@ -16,6 +17,16 @@ import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { FormProvider, FormContext } from "./Context/FormContext"; // Asegúrate de que la ruta sea correcta
 import Form1 from "./Components/Form1";
+import { InfoCliente } from "./Data/GetDatosClientes";
+import Veriff from "@veriff/js-sdk";
+import VeriffDialog from "./Components/VeriffDialog";
+
+
+
+
+
+
+
 
 // Create a new theme using Nunito Sans
 const theme = createTheme({
@@ -36,6 +47,7 @@ const theme = createTheme({
 });
 
 function App() {
+
   const { setActiveStep, handleBack, handleNext, activeStep, formData } =
     useContext(FormContext);
 
@@ -49,6 +61,8 @@ function App() {
       setActiveStep(0);
     }
   }, []);
+
+   
 
   return (
     <FormProvider>
@@ -58,12 +72,14 @@ function App() {
         </LocalizationProvider>
       </ThemeProvider>
     </FormProvider>
-  );
+  ); 
 }
 
 
 
 const AppContent: React.FC = () => {
+  const [nameClient, setNameClient] = useState("");
+  const [open, setOpen] = useState(false);
   const { setActiveStep, handleBack, handleNext, activeStep, formData } =
     useContext(FormContext);
 
@@ -78,6 +94,14 @@ const AppContent: React.FC = () => {
     }
   }, []);
 
+  const capitalizarNombre = (nombre="") => {
+    return nombre
+      .toLowerCase()
+      .split(" ")
+      .map((palabra) => palabra.charAt(0).toUpperCase() + palabra.slice(1))
+      .join(" ");
+  };
+
   useEffect(() => {
     // Get the tokenid from the URL
     const urlParams = new URLSearchParams(window.location.search);
@@ -86,9 +110,27 @@ const AppContent: React.FC = () => {
     if (tokenid) {
       // Store the tokenid in localStorage
       localStorage.setItem("tokenid", tokenid);
-      console.log("TokenID stored in localStorage:", tokenid);
+   
     }
   }, []);
+
+   useEffect(() => {
+      // Call InfoCliente.obtieneInfo()
+      InfoCliente.obtieneInfo()
+        .then((response) => {
+    
+          setNameClient(response.data[0].nombre);
+        
+        })
+        .catch((error) => {
+          // Handle errors (log to console)
+          console.error("Error getting client data:", error);
+        });
+    }, []);
+    
+   
+  
+
 
   return (
     <div className="App">
@@ -128,7 +170,7 @@ const AppContent: React.FC = () => {
             </Grid>
             <Grid item xs={12} mb={3}>
               <Typography variant="h5" color={theme.palette.secondary.main}>
-                Estimado(a): <strong>Jose Eduardo Villalobos Godoy</strong>
+                Estimado(a): <strong>{capitalizarNombre(nameClient)}</strong>
               </Typography>
             </Grid>
             <Grid item xs={12} mb={3}>
@@ -144,11 +186,19 @@ Para tu comodidad, afilia tu aporte a un medio automático con tu tarjeta de cr�
               </Typography>
             </Grid>
           </Grid>
-      
-          <Form1 />
+    
+  <Form1 />
+
+  
+
+ 
+
           {}
         </Container>
       </div>
+     
+  
+
     </div>
   );
 };

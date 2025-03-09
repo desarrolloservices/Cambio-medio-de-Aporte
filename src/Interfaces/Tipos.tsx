@@ -49,7 +49,7 @@ export interface cuenta {
     Modalidad: "AFSL1" | string; // Consider more specific types if possible
   }
 
-  export interface infoCliente {
+  export interface informacionCliente {
 Nombre: string;
 Correo: string;
 Identidad: string;

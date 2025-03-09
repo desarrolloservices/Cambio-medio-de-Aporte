@@ -37,7 +37,7 @@ import MaskExpiry from "./MaskExpiry";
 import LocalOfferIcon from "@mui/icons-material/LocalOffer";
 import EastIcon from "@mui/icons-material/East";
 import { DataGrid, GridColDef, GridRenderCellParams } from "@mui/x-data-grid";
-import { Plan, cuenta, infoCliente } from "../Interfaces/Tipos";
+import { Plan, cuenta } from "../Interfaces/Tipos";
 import { planes, planesDolares, Bancos } from "../CustomData/Planes";
 import { cuentas } from "../CustomData/Cuentas";
 import LoyaltyIcon from '@mui/icons-material/Loyalty';
@@ -53,7 +53,8 @@ import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import CircularProgress from '@mui/material/CircularProgress';
 import { wait } from "@testing-library/user-event/dist/utils";
-import { InfoCliente } from "../Data/GetDatosClientes";
+import { createVeriffFrame } from "@veriff/incontext-sdk";
+import VeriffDialog from "./VeriffDialog";
 
 interface Props {
   // Propiedades del componente
@@ -76,6 +77,8 @@ const theme = createTheme({
     borderRadius: 13,
   },
 });
+
+
 
 
 
@@ -248,20 +251,7 @@ const columns: GridColDef[] = [
 
   }
 
-  useEffect(() => {
-    // Call InfoCliente.obtieneInfo()
-    InfoCliente.obtieneInfo()
-      .then((response) => {
-        // Type the response.data
-        const clientData = response.data as infoCliente;
-        // Log the data to the console
-        console.log("Client Data:", JSON.stringify(clientData));
-      })
-      .catch((error) => {
-        // Handle errors (log to console)
-        console.error("Error getting client data:", error);
-      });
-  }, []); 
+   
   
   useEffect(() => {
     console.log("Cuenta seleccionada: ", cuentaSeleccionada);
@@ -567,115 +557,15 @@ const columns: GridColDef[] = [
         )}
         <Grid container mt={5} mb={5}>
           <Grid item xs={12}>
-            <Button onClick={handleClickOpen} variant="outlined">
-              Continuar
-            </Button>
+         
+            <VeriffDialog />
           </Grid>
         </Grid>
+       
       </Grid>
-      <Dialog
-        open={open}
-        onClose={handleClose}
-        PaperProps={{
-          component: "form",
-          onSubmit: (event: React.FormEvent<HTMLFormElement>) => {
-            event.preventDefault();
-            const formData = new FormData(event.currentTarget);
-            const formJson = Object.fromEntries((formData as any).entries());
-            const email = formJson.email;
-            console.log(email);
-            handleClose();
-          },
-        }}
-      >
-        <DialogTitle>Confirma tu gestión</DialogTitle>
-        <DialogContent>
-          <DialogContentText>
-          Confirma la información de tu solicitud y luego ingresa el código de verificación que te enviamos a tu correo electrónico.
-          </DialogContentText>
-
-          <br />
-          <Typography>
-            Aporte:{" "}
-            <strong>
-              {moneda} {formData.aporte.toLocaleString()}
-            </strong>
-          </Typography>
-          <Typography>
-            Prima:{" "}
-            <strong>
-              {moneda} {planSeleccionado.prima}
-            </strong>
-          </Typography>
-
-          <Typography>
-            Cuenta: <strong>{formData.cuenta}</strong>
-          </Typography>
-          <Typography>
-            Suma Asegurada: <strong>{planSeleccionado.sumaAsegurada}</strong>
-          </Typography>
-          <Typography>
-            Forma de Pago: <strong>{formData.formaPago}</strong>
-          </Typography>
-          {formData.formaPago === "Débito a Tarjeta" && (
-            <>
-              <Typography>
-                Número de Tarjeta: <strong>{formData.cardnumber}</strong>
-              </Typography>
-              <Typography>
-                Fecha de Vencimiento: <strong>{formData.expiryDate}</strong>
-              </Typography>
-              <Typography>
-                Fecha de Débito: <strong>{formData.diaDebito}</strong>
-              </Typography>
-            </>
-          )}
-
-          <br />
-          <TextField
-            autoFocus
-            required
-            margin="dense"
-            id="name"
-            name="code"
-            label="Código de verificación"
-            value={code}
-            placeholder={"000000"}
-            helperText="Ingresa el código que te enviamos a tu correo electrónico"
-            type="tel"
-            fullWidth
-            variant="standard"
-            sx={{
-              "& input::-webkit-outer-spin-button, & input::-webkit-inner-spin-button": {
-                                       display: "none",
-                                     },
-             "& input[type=number]": {
-                                       MozAppearance: "textfield",
-                                     },
-             }}
-             inputProps={{maxLength:6}}
-            InputProps={{
-              endAdornment: (
-                <InputAdornment position='start'>
-                  {confirmadoError && !confirmado && <ErrorOutlineIcon sx={{color:theme.palette.primary.main}} />}
-                  {confirmado && !confirmadoError && <CheckCircleOutlineIcon sx={{color:"green"}} />}
-                  {validandoCode && <CircularProgress color="inherit" size={15}/> }
-                  
-                </InputAdornment>
-              ),
-              
-            }}
-            onChange={(e)=>handleCODE((e.target as HTMLInputElement).value)}
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleClose}>Cancelar</Button>
-          <Button onClick={()=>enviarCode("+50499787930")} disabled={enviandoCode}>Enviar código</Button>
-          
-          <Button type="submit" disabled={!confirmado}>Enviar</Button>
-        </DialogActions>
-      </Dialog>
+    
     </form>
+    
   );
 };
 
