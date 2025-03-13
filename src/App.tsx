@@ -17,9 +17,8 @@ import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { FormProvider, FormContext } from "./Context/FormContext"; // Asegúrate de que la ruta sea correcta
 import Form1 from "./Components/Form1";
-import { InfoCliente } from "./Data/GetDatosClientes";
-import Veriff from "@veriff/js-sdk";
-import VeriffDialog from "./Components/VeriffDialog";
+import { InfoCliente, InfoProductos } from "./Data/GetDatosClientes";
+import useProductos from "./Hooks/ProductosCliente";
 
 
 
@@ -82,6 +81,22 @@ const AppContent: React.FC = () => {
   const [open, setOpen] = useState(false);
   const { setActiveStep, handleBack, handleNext, activeStep, formData } =
     useContext(FormContext);
+    const {  setFormData } = useContext(FormContext);
+    const { listCuentas, loading, error } = useProductos();
+
+    useEffect(() => {
+      if (!loading && listCuentas.length > 0 && setFormData) {
+        const firstCuenta = listCuentas[0];
+        if (firstCuenta) {
+          setFormData((prev) => ({
+            ...prev,
+            cuenta: firstCuenta.cuenta,
+            moneda: firstCuenta.moneda,
+          }));
+        }
+      }
+    }, [loading, listCuentas, setFormData]);
+
 
   const handleSubmit = (event: any) => {
     event.preventDefault();
@@ -126,7 +141,11 @@ const AppContent: React.FC = () => {
           // Handle errors (log to console)
           console.error("Error getting client data:", error);
         });
+       
+    
     }, []);
+
+    
     
    
   
@@ -164,8 +183,12 @@ const AppContent: React.FC = () => {
               mt={2}
               mb={2}
             >
-              <Typography variant="h4" color={theme.palette.primary.main}>
-                Aumenta tu ahorro y alcanza tus metas!
+             
+                
+              <Typography variant="h3" color={theme.palette.primary.main} >
+               Actualiza tu medio de aporte
+              
+             
               </Typography>
             </Grid>
             <Grid item xs={12} mb={3}>
@@ -174,20 +197,28 @@ const AppContent: React.FC = () => {
               </Typography>
             </Grid>
             <Grid item xs={12} mb={3}>
-              <Typography variant="body1" color={theme.palette.secondary.main}>
-              ¡Haz crecer tu patrimonio! Incrementa tu aporte mensual y asegura un mañana próspero para ti y tu familia. Cada paso cuenta en el camino hacia tus metas financieras, en el presente y futuro, Tu mejora Aliado, eres Tú.
-Para tu comodidad, afilia tu aporte a un medio automático con tu tarjeta de crédito o débito.
+              <Typography variant="h6" color={theme.palette.secondary.main}>
+              ¡Haz crecer tu patrimonio! Actualiza e incrementa tu aporte y asegura un mañana próspero para ti y tu familia. Para tu comodidad, puedes afiliar tu aporte a un medio automático con tu tarjeta de crédito o débito.
+
  
 
               </Typography>
               <br />
-              <Typography variant="body1" color={theme.palette.secondary.main}>
-              Nota: Este formulario estará disponible durante las próximas 48 horas.  ¡No pierdas la oportunidad de mejorar tu futuro!
+              <Typography variant="h5" color={theme.palette.secondary.main}>
+              <strong> Importante: Por tu seguridad para continuar debes verificar tu información. Este formulario estará disponible durante las próximas 48 horas. </strong>
               </Typography>
+              
+             
             </Grid>
           </Grid>
+          {
+            loading ? 
+                <Typography>Cargando datos ...</Typography> :
+            error ? <Typography color="error">{error}</Typography> :
+           <Form1 listCuentas={listCuentas}/>
+          }
     
-  <Form1 />
+
 
   
 

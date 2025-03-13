@@ -37,9 +37,10 @@ import MaskExpiry from "./MaskExpiry";
 import LocalOfferIcon from "@mui/icons-material/LocalOffer";
 import EastIcon from "@mui/icons-material/East";
 import { DataGrid, GridColDef, GridRenderCellParams } from "@mui/x-data-grid";
-import { Plan, cuenta } from "../Interfaces/Tipos";
+import { Plan, RawData, cuenta } from "../Interfaces/Tipos";
 import { planes, planesDolares, Bancos } from "../CustomData/Planes";
-import { cuentas } from "../CustomData/Cuentas";
+import { InfoConsulta } from "../Data/GetDatosClientes";
+
 import LoyaltyIcon from '@mui/icons-material/Loyalty';
 import CreditScoreRoundedIcon from '@mui/icons-material/CreditScoreRounded';
 import SavingsRoundedIcon from '@mui/icons-material/SavingsRounded';
@@ -55,9 +56,12 @@ import CircularProgress from '@mui/material/CircularProgress';
 import { wait } from "@testing-library/user-event/dist/utils";
 import { createVeriffFrame } from "@veriff/incontext-sdk";
 import VeriffDialog from "./VeriffDialog";
+import useExtractRawData from "../Hooks/useExtractRawData";
+import VeriffComponentClick from "./VeriffDialogClick";
+import VeriffComponent from "./VeriffDialog";
 
 interface Props {
-  // Propiedades del componente
+  listCuentas: cuenta[];
 }
 
 // Create a new theme using Nunito Sans
@@ -106,9 +110,10 @@ const TextMaskCustom = React.forwardRef<HTMLInputElement, CustomProps>(
 );
 
 <Input />
-const Form1: React.FC<Props> = (props) => {
+const Form1: React.FC<Props> = ({ listCuentas }) => {
+  
 
-  const rawData = [
+  /*const rawData = [
     {
       "ID": 9395,
       "Tarjeta": "4009501009683871",
@@ -121,7 +126,9 @@ const Form1: React.FC<Props> = (props) => {
       "DiaDebito": "16",
       "TipoDebito": { "Value": "MENSUAL" }
     }
-  ];
+  ];*/
+
+
 
   const maskCardNumber = (cardNumber: string) => {
     return `•••• •••• •••• ${cardNumber.slice(-4)}`;
@@ -155,7 +162,7 @@ const columns: GridColDef[] = [
   },
   { 
     field: "DiaDebito", 
-    headerName: "Día Débito", 
+    headerName: "Día Débitos", 
     flex: 1, 
     minWidth: 120 
   },
@@ -164,7 +171,7 @@ const columns: GridColDef[] = [
     headerName: "Tipo Débito", 
     flex: 1, 
     minWidth: 150, 
-    valueGetter: (params) => params.row.TipoDebito.Value 
+    valueGetter: (params) => params.row.TipoDebito 
   },
   {
     field: "actions",
@@ -180,7 +187,7 @@ const columns: GridColDef[] = [
           size="small"
           onClick={() => handleEdit(params.row)}
         >
-          Edit
+          Editar
         </Button>
         <Button
           variant="contained"
@@ -188,7 +195,7 @@ const columns: GridColDef[] = [
           size="small"
           onClick={() => handleDelete(params.row)}
         >
-          Delete
+          Agregar
         </Button>
       </Stack>
     ),
@@ -203,18 +210,24 @@ const columns: GridColDef[] = [
   const [code, setCode] = useState("");
   const {enviarCode,enviandoCode,validarCode,confirmado,validandoCode,confirmadoError,setValidandoCode} = useTwilio();
 
-  const { formData, handleInputChange, handleSelectChange, setFormData, } =
-    useContext(FormContext); // Use the FormContext
+  const { formData, handleInputChange, handleSelectChange, setFormData } =
+  useContext(FormContext); // Use the FormContext
 
-  const [moneda, setMoneda] = useState("L");
+const [moneda, setMoneda] = useState("L");
 
   const [planSeleccionado, setPlanSeleccionado] = React.useState<Plan>(
     planes[0]
   );
 
   const [cuentaSeleccionada, setCuentaSeleccionada] = React.useState<cuenta>(
-    cuentas[0]
+    listCuentas[0]
   );
+
+  // Use the custom hook
+  const { rawData, loadingData, errorData } = useExtractRawData({
+    cuenta: cuentaSeleccionada.cuenta,
+  });
+
 
   const [open, setOpen] = React.useState(false);
 
@@ -231,8 +244,18 @@ const columns: GridColDef[] = [
   };
 
   const filterCuentas = (cuentaRecibida: string) => {
-    setCuentaSeleccionada(cuentas.filter((cuenta) => cuenta.cuenta === cuentaRecibida)[0]);
+    const foundCuenta = listCuentas.find((cuenta) => cuenta.cuenta === cuentaRecibida);
+
+    if (foundCuenta) {
+      setCuentaSeleccionada(foundCuenta);
+    } else {
+      console.error(`Cuenta no encontrada: ${cuentaRecibida}`);
+      // Handle the case where the cuenta is not found, e.g., setCuentaSeleccionada(null) or show an error message
+    }
   }
+
+ 
+
 
   const handleCODE = (codigo:string)=>{
     setCode(codigo);
@@ -251,8 +274,6 @@ const columns: GridColDef[] = [
 
   }
 
-   
-  
   useEffect(() => {
     console.log("Cuenta seleccionada: ", cuentaSeleccionada);
     if (setFormData) {
@@ -266,8 +287,12 @@ const columns: GridColDef[] = [
       }));
     }
     setMoneda(cuentaSeleccionada.moneda);
-  },[]);
-
+     // Call fetchDataForAccount when cuentaSeleccionada changes
+    
+  },[cuentaSeleccionada]);
+   
+  
+ 
   useEffect(() => {
     console.log("Cambiando plan seleccionado");
     if (setFormData) {
@@ -280,12 +305,18 @@ const columns: GridColDef[] = [
       }));
     }
     setMoneda(cuentaSeleccionada.moneda);
-  }, [planSeleccionado,cuentaSeleccionada]);
+  }, [planSeleccionado, cuentaSeleccionada]);
 
 
 
   return (
     <form>
+        <Grid container mt={5} mb={5}>
+          <Grid item xs={12}>
+         
+            <VeriffComponent /> {/* Use the new component */}
+          </Grid>
+        </Grid>
       <Grid container spacing={2} rowSpacing={4}>
         <Grid item xs={12}>
           <FormControl variant="outlined" fullWidth>
@@ -305,13 +336,11 @@ const columns: GridColDef[] = [
               }
 
             >
-              {cuentas.map((cuenta) => {
-                return (
-                  <MenuItem value={cuenta.cuenta} key={cuenta.cuenta}>
-                    {cuenta.cuenta}
-                  </MenuItem>
-                );
-              })}
+              {listCuentas.map((cuenta) => (
+      <MenuItem value={cuenta.cuenta} key={cuenta.cuenta}>
+        {cuenta.cuenta}
+      </MenuItem>
+    ))}
             </Select>
           </FormControl>
         </Grid>
@@ -555,12 +584,9 @@ const columns: GridColDef[] = [
         </Grid>
           </>
         )}
-        <Grid container mt={5} mb={5}>
-          <Grid item xs={12}>
-         
-            <VeriffDialog />
-          </Grid>
-        </Grid>
+       
+
+      
        
       </Grid>
     

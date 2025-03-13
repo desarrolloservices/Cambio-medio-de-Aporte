@@ -77,8 +77,8 @@ const VeriffComponent: React.FC = () => {
         boton.classList.remove("veriff-submit", "are-filled");
   
         // Estilos personalizados
-        boton.style.backgroundColor = "white"; // Rojo personalizado
-        boton.style.color = "#D32F2F"; // Texto en blanco
+        boton.style.backgroundColor = "#D32F2F"; // Rojo personalizado
+        boton.style.color = "white"; // Texto en blanco
         boton.style.border = "2px solid #D32F2F"; // Borde rojo
         boton.style.borderRadius = "12px"; // Bordes redondeados
         boton.style.fontSize = "16px"; // Ajustar tamaño de fuente

@@ -61,6 +61,17 @@ Identidad: string;
     Contrato: string;
     Modalidad: string;
       }
-      
+
+      export interface RawData {
+        Tarjeta: string;
+        Aporte: number; // Or string, depending on how you want to represent it
+        DiaDebito: string;
+        FechaVencimiento: string; // Or Date, if you want to convert it
+        TipoDebito: string; // Directly get the Value of TipoDebito
+        Estatus: string; // Directly get the Value of Estatus
+        ID: number; // this is to use it in the getRowId
+        Contrato: string;
+  }
+  
   
   
