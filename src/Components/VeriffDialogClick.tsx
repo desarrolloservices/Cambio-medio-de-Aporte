@@ -22,14 +22,7 @@ const VeriffComponentClick: React.FC = () => {
       caso: 0,
     };
 
-    const myDataForm = {
-      nombre: formData.primerNombre, // you need to put the real name
-      apellido: formData.primerApellido, // you need to put the real apellido
-      identidad: formData.numeroIdentificacion, // you need to put the real identidad
-      idgestion: 0, // you need to put the correct id
-      email: "jvillalobos@afpatlantida.com", // you need to put the real email or from the form
-      caso: 0, // you need to put the correct caso
-    };
+   
 
     try {
       const sendResponse = await InfoInsertaVeriff.InfoConsulta(myData); // use myDataForm when the data is ok

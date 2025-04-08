@@ -1,5 +1,7 @@
 import { Update } from "@mui/icons-material";
 import axios from "axios";
+import crypto from "crypto-js";
+import { ClienteData } from "../Interfaces/Tipos";
 
 export interface dataVeriff {
   nombre: string;
@@ -41,6 +43,12 @@ export const instanceUpdate = axios.create({
 export const instanceInsert = axios.create({
   baseURL: process.env.REACT_APP_POST,
 });
+
+export const instanceGetSession = axios.create({
+  baseURL: process.env.REACT_APP_WHOOK,
+});
+
+
 
 
 
@@ -124,7 +132,7 @@ export const InfoActualiza = {
 
 
 export const InfoInsert = {
- InsertInfo: function () {
+ InsertInfo: function (data: ClienteData) {
 
 
     return instanceInsert.get('',{
@@ -149,6 +157,55 @@ export const InfoInsertaVeriff = {
       headers: {
                 "Content-Type": "application/json",
   
+      },
+    });
+  },
+};
+
+export const validateToken = {
+  getToken: function () {
+    // Append the id to the endpoint
+    const token = localStorage.getItem("tokenid");
+console.log(token);
+    return instanceToken.get('', {
+        headers: {
+          'Access-Control-Allow-Origin': 'http://localhost:3000/',
+          'Access-Control-Allow-Methods': 'DELETE, POST, GET, OPTIONS',
+          'Access-Control-Allow-Headers': 'Content-Type, AuthorizationAFP, X-Requested-With,token',
+          
+          //'Content-Type': 'application/json',
+          "AuthorizationAFP": token,
+            // Add more headers here if needed
+        }
+    });
+}
+}
+
+
+export const validateSession = {
+  obtieneSession: function (session:string) {
+    
+const veriffPk : string =  process.env.REACT_APP_PKV!;
+
+
+const signature = crypto.HmacSHA256(session, veriffPk).toString();
+
+
+    return instanceGetSession.get(session+"/decision",{
+      headers: {
+        "Access-Control-Allow-Origin": "localhost:3000/",
+        "Access-Control-Allow-Methods": "DELETE, POST, GET, OPTIONS",
+        "Access-Control-Allow-Headers":
+          "Content-Type, Authorization, X-Requested-With,token",
+
+        "Content-Type": "application/json",
+        "X-AUTH-CLIENT": process.env.REACT_APP_KV,
+        "X-HMAC-SIGNATURE": signature
+       
+        
+   
+
+        // Add more headers here if needed
       },
     });
   },

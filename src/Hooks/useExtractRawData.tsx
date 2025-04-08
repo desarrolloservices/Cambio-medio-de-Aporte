@@ -17,9 +17,11 @@ interface useExtractRawDataProps {
         setErrorData(null);
         try {
           const response = await InfoConsulta.InfoConsulta(cuenta);
-        
+
           if (Array.isArray(response.data)) {
             const extractedData: RawData[] = response.data.reduce((acc: RawData[], item: any) => {
+
+              console.log("La respuesta es:"+item.Estatus.Value);
                 if (item.Estatus.Value !== 'I') {
                   acc.push({
                     Tarjeta: item.Tarjeta,
@@ -36,6 +38,8 @@ interface useExtractRawDataProps {
               }, []);
            
             setRawData(extractedData);
+
+            
            
           } else {
           

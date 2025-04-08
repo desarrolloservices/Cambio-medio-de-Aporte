@@ -59,6 +59,9 @@ import VeriffDialog from "./VeriffDialog";
 import useExtractRawData from "../Hooks/useExtractRawData";
 import VeriffComponentClick from "./VeriffDialogClick";
 import VeriffComponent from "./VeriffDialog";
+import useValidateToken from "../Hooks/UseValidateTk";
+import VeriffComponentNew from "./VeriffDialogoNew";
+import VeriffStatusChecker from "./ValidateSession";
 
 interface Props {
   listCuentas: cuenta[];
@@ -111,24 +114,13 @@ const TextMaskCustom = React.forwardRef<HTMLInputElement, CustomProps>(
 
 <Input />
 const Form1: React.FC<Props> = ({ listCuentas }) => {
-  
+  const { isValid, isOVP } = useValidateToken();
 
-  /*const rawData = [
-    {
-      "ID": 9395,
-      "Tarjeta": "4009501009683871",
-      "DiaDebito": "16",
-      "TipoDebito": { "Value": "UNICO" }
-    },
-    {
-      "ID": 9396,
-      "Tarjeta": "4009501009683871",
-      "DiaDebito": "16",
-      "TipoDebito": { "Value": "MENSUAL" }
-    }
-  ];*/
-
-
+  const [veriffSessionId, setVeriffSessionId] = useState<string | null>(null);
+  const [veriffStarted, setVeriffStarted] = useState(false);
+  const [veriffApproved, setVeriffApproved] = useState(false);
+  const [veriffError, setVeriffError] = useState(false);
+  const [showCardForm, setShowCardForm] = useState(false);
 
   const maskCardNumber = (cardNumber: string) => {
     return `•••• •••• •••• ${cardNumber.slice(-4)}`;
@@ -193,7 +185,7 @@ const columns: GridColDef[] = [
           variant="contained"
           color="secondary"
           size="small"
-          onClick={() => handleDelete(params.row)}
+          onClick={() => handleAddCard()}
         >
           Agregar
         </Button>
@@ -220,13 +212,42 @@ const [moneda, setMoneda] = useState("L");
   );
 
   const [cuentaSeleccionada, setCuentaSeleccionada] = React.useState<cuenta>(
-    listCuentas[0]
+    listCuentas.length > 0 ? listCuentas[0] : {} as cuenta
   );
+
+
 
   // Use the custom hook
   const { rawData, loadingData, errorData } = useExtractRawData({
     cuenta: cuentaSeleccionada.cuenta,
   });
+
+
+
+  const CustomNoRowsOverlay = ({ onAddCard }: { onAddCard: () => void }) => (
+    <Box
+      sx={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        height: '100%',
+        padding: 2,
+      }}
+    >
+      <Typography variant="body2" sx={{ mb: 2 }}>
+        No hay métodos de pago registrados.
+      </Typography>
+      <Button
+        variant="contained"
+        color="primary"
+        startIcon={<CreditCardIcon />}
+        onClick={onAddCard}
+      >
+        Agregar método de pago
+      </Button>
+    </Box>
+  );
 
 
   const [open, setOpen] = React.useState(false);
@@ -254,7 +275,9 @@ const [moneda, setMoneda] = useState("L");
     }
   }
 
- 
+  const handleAddCard = () => {
+    setShowCardForm(true); // Esto muestra el formulario
+  };
 
 
   const handleCODE = (codigo:string)=>{
@@ -275,7 +298,7 @@ const [moneda, setMoneda] = useState("L");
   }
 
   useEffect(() => {
-    console.log("Cuenta seleccionada: ", cuentaSeleccionada);
+    
     if (setFormData) {
       setFormData((prev) => ({
         ...prev,
@@ -294,7 +317,8 @@ const [moneda, setMoneda] = useState("L");
   
  
   useEffect(() => {
-    console.log("Cambiando plan seleccionado");
+    
+
     if (setFormData) {
       setFormData((prev) => ({
         ...prev,
@@ -311,13 +335,34 @@ const [moneda, setMoneda] = useState("L");
 
   return (
     <form>
-        <Grid container mt={5} mb={5}>
-          <Grid item xs={12}>
-         
-            <VeriffComponent /> {/* Use the new component */}
-          </Grid>
-        </Grid>
-      <Grid container spacing={2} rowSpacing={4}>
+      {isOVP && (
+  <Grid container mt={5} mb={5}>
+    <Grid item xs={12}>
+      {(!veriffApproved || veriffError) && (
+        <VeriffComponentNew
+          onSessionCreated={setVeriffSessionId}
+          onVeriffStarted={() => {
+            setVeriffStarted(true);
+            setVeriffError(false); // limpiar error al intentar de nuevo
+          }}
+        />
+      )}
+    </Grid>
+
+    {veriffSessionId && veriffStarted && (
+    
+    <VeriffStatusChecker
+        sessionId={veriffSessionId}
+        onApproved={() => setVeriffApproved(true)}
+        onRejected={() => {
+          setVeriffError(true);
+          setVeriffStarted(false); 
+        }}
+      />
+    )}
+  </Grid>
+)}
+       {(veriffApproved || !isOVP) && (<Grid container spacing={2} rowSpacing={4} top={4} mb={5}>
         <Grid item xs={12}>
           <FormControl variant="outlined" fullWidth>
             <InputLabel id="cuenta-label">Selecciona tu cuenta</InputLabel>
@@ -328,7 +373,7 @@ const [moneda, setMoneda] = useState("L");
               name="cuenta"
               label="Selecciona tu cuenta"
               onChange={(e, value) => filterCuentas(e.target.value as string)}
-              value={formData.cuenta}
+              value={formData?.cuenta || ""}
               startAdornment={
                 <InputAdornment position="start">
                   <SavingsRoundedIcon sx={{color:theme.palette.primary.main}}/>
@@ -405,22 +450,23 @@ const [moneda, setMoneda] = useState("L");
           >
             Tus medios de pago:
           </Typography>
-          <Box sx={{ width: "100%", display: "flex", justifyContent: "center" }}>
-      <DataGrid
-        rows={rawData}
-        columns={columns}
-        getRowId={(row) => row.ID} // Using ID as unique key
-        autoHeight // Fixes bottom blank space issue
-        disableColumnMenu // Hides unnecessary column settings
-        disableRowSelectionOnClick // Prevents row selection when clicking buttons
-        hideFooterPagination={rawData.length <= 5} // Hides pagination if rows are 5 or less
-        pageSizeOptions={[5, 10]}
-      />
-    </Box>
+          <DataGrid
+  rows={rawData}
+  columns={columns}
+  getRowId={(row) => row.ID}
+  autoHeight
+  disableColumnMenu
+  disableRowSelectionOnClick
+  hideFooterPagination={rawData.length <= 5}
+  pageSizeOptions={[5, 10]}
+  components={{
+    NoRowsOverlay: () => <CustomNoRowsOverlay onAddCard={handleAddCard} />
+  }}
+/>
           </Grid>
 
 
-    <Grid item xs={12} sm={12}>
+      {/*<Grid item xs={12} sm={12}>
           <Typography
             variant="h6"
             align="justify"
@@ -449,29 +495,33 @@ const [moneda, setMoneda] = useState("L");
               <MenuItem value="Débito a Tarjeta">Débito a Tarjeta</MenuItem>
             </Select>
           </FormControl>
-        </Grid>
-        {formData.formaPago === "Débito a Tarjeta" && (
-          <>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                id="cardnumber"
-                name="cardnumber"
-                label="Número de la Tarjeta"
-                variant="outlined"
-                type="number"
-                value={parseInt(formData?.cardnumber)}
-                onChange={handleInputChange}
-                fullWidth
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <CreditCardIcon sx={{color:theme.palette.primary.main}} />
-                    </InputAdornment>
-                  ),
-                }}
-                required
-              />
-            </Grid>
+        </Grid>*/}
+             {/*{formData.formaPago === "Débito a Tarjeta" && (
+          <>*/}
+            {showCardForm && (
+  <>
+    <Grid item xs={12} sm={6}>
+      <TextField
+        id="cardnumber"
+        name="cardnumber"
+        label="Número de la Tarjeta"
+        variant="outlined"
+        type="number"
+        value={parseInt(formData?.cardnumber)}
+        onChange={handleInputChange}
+        fullWidth
+        InputProps={{
+          startAdornment: (
+            <InputAdornment position="start">
+              <CreditCardIcon sx={{ color: theme.palette.primary.main }} />
+            </InputAdornment>
+          ),
+        }}
+        required
+      />
+    </Grid>
+
+   
 
             <Grid item xs={6} sm={3}>
               <FormControl>
@@ -552,7 +602,7 @@ const [moneda, setMoneda] = useState("L");
                 </Select>
               </FormControl>
             </Grid>
-            <Grid item xs={12} sm={12}>
+            <Grid item xs={12} sm={12} >
          
          
           <FormControl fullWidth>
@@ -582,14 +632,32 @@ const [moneda, setMoneda] = useState("L");
             </Select>
           </FormControl>
         </Grid>
-          </>
-        )}
+        <Grid item xs={12} sx={{ mt: 2 }}>
+  <Button
+    variant="contained"
+    color="primary"
+    fullWidth
+    onClick={() => {
+      // Aquí puedes manejar el envío, validación o guardar los datos
+      console.log("Formulario enviado:", formData);
+    }}
+  >
+    Enviar
+  </Button>
+</Grid>
+         
+  </>
+)}
+        {/*  </>
+        )}*/}
        
 
       
        
       </Grid>
-    
+
+      
+     )}
     </form>
     
   );

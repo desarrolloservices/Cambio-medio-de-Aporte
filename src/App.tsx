@@ -17,8 +17,10 @@ import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { FormProvider, FormContext } from "./Context/FormContext"; // Asegúrate de que la ruta sea correcta
 import Form1 from "./Components/Form1";
-import { InfoCliente, InfoProductos } from "./Data/GetDatosClientes";
-import useProductos from "./Hooks/ProductosCliente";
+import { InfoCliente, InfoProductos, validateToken } from "./Data/GetDatosClientes";
+import useProductos from "./Hooks/UseProductosCliente";
+import useValidateToken from "./Hooks/UseValidateTk";
+import { informacionCliente } from "./Interfaces/Tipos";
 
 
 
@@ -45,10 +47,13 @@ const theme = createTheme({
   },
 });
 
-function App() {
 
+function App() {
+  
   const { setActiveStep, handleBack, handleNext, activeStep, formData } =
     useContext(FormContext);
+
+    
 
   const handleSubmit = (event: any) => {
     event.preventDefault();
@@ -78,7 +83,12 @@ function App() {
 
 const AppContent: React.FC = () => {
   const [nameClient, setNameClient] = useState("");
-  const [open, setOpen] = useState(false);
+  const { isValid, isOVP } = useValidateToken();
+  const [clienteInfo, setClienteInfo] = useState<informacionCliente>({
+    Nombre: "",
+    Correo: "",
+    Email: "",
+  });
   const { setActiveStep, handleBack, handleNext, activeStep, formData } =
     useContext(FormContext);
     const {  setFormData } = useContext(FormContext);
@@ -130,7 +140,8 @@ const AppContent: React.FC = () => {
   }, []);
 
    useEffect(() => {
-      // Call InfoCliente.obtieneInfo()
+    
+    
       InfoCliente.obtieneInfo()
         .then((response) => {
     
@@ -204,9 +215,11 @@ const AppContent: React.FC = () => {
 
               </Typography>
               <br />
+              {isOVP && 
               <Typography variant="h5" color={theme.palette.secondary.main}>
               <strong> Importante: Por tu seguridad para continuar debes verificar tu información. Este formulario estará disponible durante las próximas 48 horas. </strong>
               </Typography>
+              }
               
              
             </Grid>
