@@ -1,8 +1,9 @@
+// ValidateSession.tsx
 import { useEffect, useState } from 'react';
-import { validateSession } from '../Data/GetDatosClientes';
+import { validateSession1 } from '../Data/GetDatosClientes';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import { on } from 'events';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
+import Cookies from 'js-cookie';
 
 interface Props {
   sessionId: string;
@@ -10,7 +11,7 @@ interface Props {
   onRejected: () => void;
 }
 
-const VeriffStatusChecker = ({ sessionId, onApproved }: Props) => {
+const VeriffStatusChecker = ({ sessionId, onApproved, onRejected }: Props) => {
   const [status, setStatus] = useState<string | null>(null);
 
   useEffect(() => {
@@ -18,54 +19,59 @@ const VeriffStatusChecker = ({ sessionId, onApproved }: Props) => {
 
     const fetchStatus = async () => {
       try {
-        const response = await validateSession.obtieneSession(sessionId);
-        const estado = response.data.verification.status;
-        console.log("Estado actual:", estado);
+        const response = await validateSession1.obtieneSession(sessionId);
+        const estado = response.data.status;
+        console.log("📡 Estado actual Veriff:", estado);
+        console.log(response.data);
         setStatus(estado);
-
-        if (estado === 'approved') {
+              
+        if (response.data.verification.status === 'approved') {
           clearInterval(intervalId);
-   
-          onApproved(); //
-          localStorage.setItem("veriffStatus", "approved");
-          
-        }else{
+          onApproved();
+          Cookies.set("veriffStatus", "approved", {
+            path: "/",
+            sameSite: "Strict",
+            secure: false,
+            expires: 1,
+          });
+        } else if (response.data.verification.status === 'rejected') {
           clearInterval(intervalId);
-          
-          localStorage.setItem("veriffStatus", "rejected");
-        
-
+          onRejected();
+          Cookies.set("veriffStatus", "rejected", {
+            path: "/",
+            sameSite: "Strict",
+            secure: false,
+            expires: 1,
+          });
         }
       } catch (error) {
-        console.error('❌ Error al consultar Veriff:', error);
-        localStorage.setItem("veriffStatus", "not started");
+        console.error('❌ Error al consultar estado de Veriff:', error);
       }
     };
 
-    fetchStatus(); // Llamada inicial
-    intervalId = setInterval(fetchStatus, 10000); // cada 10 segundos
+    fetchStatus(); // Primer chequeo inmediato
+    intervalId = setInterval(fetchStatus, 1000); // 💡 cada 1 segundo
 
-    return () => clearInterval(intervalId); // limpieza al desmontar
-  }, [sessionId, onApproved]);
+    return () => clearInterval(intervalId); // limpieza
+  }, [sessionId]);
 
   return (
     <div style={{ textAlign: 'center', marginTop: '1rem' }}>
       {status === 'approved' ? (
-  <p style={{ color: 'green', fontWeight: 'bold', fontSize: '1.2rem' }}>
-    <CheckCircleIcon sx={{ verticalAlign: 'middle', mr: 1 }} />
-    Identidad verificada correctamente
-  </p>
-) : status === 'reject' ? (
-  <p style={{ color: 'red', fontWeight: 'bold', fontSize: '1.2rem' }}>
-    <ErrorOutlineIcon sx={{ verticalAlign: 'middle', mr: 1 }} />
-    Verificación rechazada. Por favor, intente de nuevo.
-  </p>
-) : (
-  <p>Estado actual: {status ?? 'Validando por favor espere...'}</p>
-)}
+        <p style={{ color: 'green', fontWeight: 'bold', fontSize: '1.2rem' }}>
+          <CheckCircleIcon sx={{ verticalAlign: 'middle', mr: 1 }} />
+          Identidad verificada correctamente
+        </p>
+      ) : status === 'rejected' ? (
+        <p style={{ color: 'red', fontWeight: 'bold', fontSize: '1.2rem' }}>
+          <ErrorOutlineIcon sx={{ verticalAlign: 'middle', mr: 1 }} />
+          Verificación rechazada. Por favor, intente de nuevo.
+        </p>
+      ) : (
+        <p>Estado actual: {status ?? 'Validando, por favor espere...'}</p>
+      )}
     </div>
   );
 };
-
 
 export default VeriffStatusChecker;

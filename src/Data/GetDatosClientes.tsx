@@ -1,7 +1,8 @@
 import { Update } from "@mui/icons-material";
 import axios from "axios";
 import crypto from "crypto-js";
-import { ClienteData } from "../Interfaces/Tipos";
+import { ClienteData, ClienteDataUpdate } from "../Interfaces/Tipos";
+import Cookies from "js-cookie";
 
 export interface dataVeriff {
   nombre: string;
@@ -11,7 +12,7 @@ export interface dataVeriff {
   email: string;
   caso: number;
 }
-
+ 
 
 export const instanceCliente = axios.create({
   baseURL: process.env.REACT_APP_URL_NOMBRE,
@@ -48,13 +49,63 @@ export const instanceGetSession = axios.create({
   baseURL: process.env.REACT_APP_WHOOK,
 });
 
+//NEXT
+
+export const instanceToken1 = axios.create({
+  baseURL:  process.env.REACT_APP_API_TOKEN,
+  withCredentials: true,                
+});
+export const instanceCliente1 = axios.create({
+  baseURL:  process.env.REACT_APP_API_CLIENTE,
+  withCredentials: true,                
+});
+
+
+export const instanceProductos1 = axios.create({
+  baseURL:  process.env.REACT_APP_API_PRODUCTOS,
+  withCredentials: true,                
+});
+
+
+export const instanceConsulta1 = axios.create({
+  baseURL:  process.env.REACT_APP_API_GET,
+  withCredentials: true,                
+});
+export const instanceUpdate1 = axios.create({
+  baseURL:  process.env.REACT_APP_API_UPD,
+  withCredentials: true,                
+});
+
+
+export const instanceInsert1 = axios.create({
+  baseURL:  process.env.REACT_APP_API_POST,
+  withCredentials: true,                
+});
+
+export const instanceGetSession1 = axios.create({
+  baseURL:  process.env.REACT_APP_API_WHOOK,
+  withCredentials: true,               
+});
+
+export const instanceVerificar1 = axios.create({
+  baseURL:  process.env.REACT_APP_API_VERIFF,
+  withCredentials: true,               
+                 
+});
+
+
+
+
+
+
+
 
 
 
 
 export const InfoCliente = {
   obtieneInfo: function () {
-    const tokenid = localStorage.getItem("tokenid");
+   const tokenid = localStorage.getItem("tokenid");
 
 
     return instanceCliente.get('',{
@@ -166,7 +217,7 @@ export const validateToken = {
   getToken: function () {
     // Append the id to the endpoint
     const token = localStorage.getItem("tokenid");
-console.log(token);
+
     return instanceToken.get('', {
         headers: {
           'Access-Control-Allow-Origin': 'http://localhost:3000/',
@@ -211,6 +262,107 @@ const signature = crypto.HmacSHA256(session, veriffPk).toString();
   },
 };
 
+export const validateToken1 = {
+  getToken: function () {
+    const tokenid = Cookies.get('tokenid'); // 
+
+    return instanceToken1.get('', {
+      headers: {
+        "Content-Type": "application/json",
+        AuthorizationAFP: tokenid ?? '',
+      },
+      withCredentials: true, 
+    });
+  },
+};
+
+export const InfoCliente1 = {
+  obtieneInfo: function () {
+    const tokenid = Cookies.get('tokenid'); //
+    return instanceCliente1.get('', {
+      headers: {
+        "Content-Type": "application/json",
+        AuthorizationAFP: tokenid ?? '',
+      },
+      withCredentials: true,
+    });
+  },
+};
+
+export const InfoProductos1 = {
+  obtieneInfo: function () {
+    const tokenid = Cookies.get('tokenid'); // 
+
+    return instanceProductos1.get('', {
+      headers: {
+        "Content-Type": "application/json",
+        AuthorizationAFP: tokenid ?? '',
+      },
+      withCredentials: true,
+    });
+  },
+};
+
+export const InfoActualiza1 = {
+  UpdateInfo: function (data: ClienteDataUpdate) {
+    return instanceUpdate1.post('', data, {
+      headers: {
+        "Content-Type": "application/json",
+      },
+      withCredentials: true, 
+    });
+  },
+};
+
+export const InfoInsert1 = {
+  InsertInfo: function (data: ClienteData) {
+    return instanceInsert1.post('', data, {
+      headers: {
+        "Content-Type": "application/json",
+      },
+      withCredentials: true,
+    });
+  },
+};
+
+export const InfoInsertaVeriff1 = {
+  InfoConsulta: function (data: dataVeriff) {
+    return instanceVerificar1.post('', data, {
+      headers: {
+        "Content-Type": "application/json",
+      },
+      withCredentials: true,
+    });
+  },
+};
+
+export const InfoConsulta1 = {
+  InfoConsulta: function (cuenta: string) {
+    const cta = { cuenta: cuenta };
+
+    return instanceConsulta1.post('', cta, {
+      headers: {
+        "Content-Type": "application/json",
+      },
+      withCredentials: true, 
+    });
+  },
+};
+
+
+export const validateSession1 = {
+  obtieneSession: function (session: string) {
+   
+
+    return instanceGetSession1.get(`/validatesession?session=${session}`, {
+      headers: {
+        "Content-Type": "application/json",
+       
+      },
+      withCredentials: true, 
+    });
+  },
+};
 
 
 

@@ -7,7 +7,9 @@ export const cuentas: cuenta[] = [
         "prima":300,
         "forma_pago":"Carné",
         "moneda":"L",
-        "aporte":550
+        "aporte":550,
+        "contrato":"",
+        "modalidad":""
     },
     {
         "cuenta":"34666",
@@ -15,6 +17,8 @@ export const cuentas: cuenta[] = [
         "prima":100,
         "forma_pago":"Carné",
         "moneda":"$",
-        "aporte":55
+        "aporte":55,
+        "contrato":"",
+        "modalidad":""
     }
 ];

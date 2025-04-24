@@ -13,6 +13,8 @@ export interface cuenta {
     forma_pago: string;
     moneda: string;
     aporte: number;
+    contrato:string;
+    modalidad:string;
   }
 
  
@@ -34,10 +36,31 @@ export interface cuenta {
     Modalidad: "AFSL1" | string; // Consider more specific types if possible
   }
 
+  export interface ClienteDataUpdate {
+    ID:string;
+    Tarjeta: string;
+    Aporte: "MENSUAL" | string; // Consider more specific types if possible
+    Monto: string; 
+    Contrato: string;
+    MonedaCCI: "LEMPIRAS" | string; // Consider more specific types if possible
+    DiaDebito: string;
+    Identidad: string;
+    CCI: string;
+    Email: string;
+    NombreCliente: string;
+    Banco: string;
+    Vencimiento: string;
+    TipoDebito: "TC" | string; // Consider more specific types if possible
+    Modalidad: "" | string; // Consider more specific types if possible
+    Estado:"I"
+  }
+
+  
+
   export interface informacionCliente {
 Nombre: string;
 Correo: string;
-Email: string;
+Edad: string;
   }
 
   export interface productosCliente {
@@ -49,13 +72,16 @@ Email: string;
 
       export interface RawData {
         Tarjeta: string;
-        Aporte: number; // Or string, depending on how you want to represent it
+        Aporte: string; 
         DiaDebito: string;
-        FechaVencimiento: string; // Or Date, if you want to convert it
-        TipoDebito: string; // Directly get the Value of TipoDebito
-        Estatus: string; // Directly get the Value of Estatus
-        ID: number; // this is to use it in the getRowId
+        FechaVencimiento: string; 
+        TipoDebito: string; 
+        Estatus: string;
+        ID: number; 
         Contrato: string;
+        Banco:String;
+        Monto:String;
+
   }
   
   

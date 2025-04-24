@@ -1,66 +1,65 @@
-import { useState, useEffect } from 'react';
-import { InfoConsulta } from '../Data/GetDatosClientes';
-import { RawData } from '../Interfaces/Tipos';
+import { useEffect, useState } from "react";
+import { InfoConsulta1 } from "../Data/GetDatosClientes";
+import { RawData } from "../Interfaces/Tipos";
 
 interface useExtractRawDataProps {
-    cuenta: string;
-  }
-  
-  const useExtractRawData = ({cuenta}:useExtractRawDataProps) => {
-    const [rawData, setRawData] = useState<RawData[]>([]);
-    const [loadingData, setLoadingData] = useState(true);
-    const [errorData, setErrorData] = useState<string | null>(null);
-  
-    useEffect(() => {
-      const fetchData = async () => {
-        setLoadingData(true);
-        setErrorData(null);
-        try {
-          const response = await InfoConsulta.InfoConsulta(cuenta);
+  cuenta: string;
+  trigger?: any; // para forzar recarga si cambia este valor
+}
 
-          if (Array.isArray(response.data)) {
-            const extractedData: RawData[] = response.data.reduce((acc: RawData[], item: any) => {
+const useExtractRawData = ({ cuenta, trigger }: useExtractRawDataProps) => {
+  const [rawData, setRawData] = useState<RawData[]>([]);
+  const [loadingData, setLoadingData] = useState(true);
+  const [errorData, setErrorData] = useState<string | null>(null);
 
-              console.log("La respuesta es:"+item.Estatus.Value);
-                if (item.Estatus.Value !== 'I') {
-                  acc.push({
-                    Tarjeta: item.Tarjeta,
-                    Aporte: item.Aporte,
-                    DiaDebito: item.DiaDebito,
-                    FechaVencimiento: item.FechaVencimiento,
-                    TipoDebito: item.TipoDebito.Value,
-                    Estatus: item.Estatus.Value,
-                    ID: item.ID,
-                    Contrato: item.Contrato,
-                  });
-                }
-                return acc;
-              }, []);
-           
-            setRawData(extractedData);
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoadingData(true);
+      setErrorData(null);
+      try {
+        const response = await InfoConsulta1.InfoConsulta(cuenta);
 
-            
-           
-          } else {
-          
-            setRawData([]);
-          }
-        } catch (error) {
-       
+        if (Array.isArray(response.data)) {
+          const extractedData: RawData[] = response.data.reduce(
+            (acc: RawData[], item: any) => {
+              if (item.Estatus.Value !== 'I') {
+                acc.push({
+                  Tarjeta: item.Tarjeta,
+                  Aporte: item.Aporte,
+                  DiaDebito: item.DiaDebito,
+                  FechaVencimiento: item.FechaVencimiento,
+                  TipoDebito: item.TipoDebito.Value,
+                  Estatus: item.Estatus.Value,
+                  ID: item.ID,
+                  Contrato: item.Contrato,
+                  Banco:item.Emisor,
+                  Monto:item.Aporte
+
+                });
+              }
+              return acc;
+            },
+            []
+          );
+
+          setRawData(extractedData);
+        } else {
           setRawData([]);
-        } finally {
-       
-          setLoadingData(false);
         }
-    
-      };
-  
-      if (cuenta) { // Check if cuenta is available
-        fetchData();
+      } catch (error) {
+        setRawData([]);
+        setErrorData('Error al consultar los datos.');
+      } finally {
+        setLoadingData(false);
       }
-    }, [cuenta]); // Dependency array to run when cuenta changes
-  
-    return { rawData, loadingData, errorData };
-  };
-  
-  export default useExtractRawData;
+    };
+
+    if (cuenta) {
+      fetchData();
+    }
+  }, [cuenta, trigger]); // se ejecuta también cuando trigger cambie
+
+  return { rawData, loadingData, errorData };
+};
+
+export default useExtractRawData;

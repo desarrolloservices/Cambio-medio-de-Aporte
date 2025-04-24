@@ -20,6 +20,7 @@ export interface FormData {
   sumaAsegurada: number;
   banco:string;
   cel:string;
+  monto:string;
 }
 
 export interface FormContextProps {
@@ -63,7 +64,8 @@ const FormProvider: React.FC<{ children: React.ReactNode }> = ({
     cuenta: "",
     sumaAsegurada: 0,
     banco:"",
-    cel:""
+    cel:"",
+    monto:""
   });
 
   const handleInputChange = (event: any) => {

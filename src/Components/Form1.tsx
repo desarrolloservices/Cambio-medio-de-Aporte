@@ -1,93 +1,42 @@
-import React, { useContext, useEffect, useRef, useState } from "react";
+// Form1.tsx
+import React, { useContext, useEffect, useState } from "react";
 import {
-  TextField,
-  Button,
-  Select,
-  MenuItem,
+  Grid,
   FormControl,
   InputLabel,
-  Grid,
-  Card,
-  CardHeader,
-  createTheme,
-  Typography,
+  Select,
+  MenuItem,
   InputAdornment,
-  Slider,
+  Typography,
+  Button,
   Box,
-  CardContent,
-  Dialog,
-  DialogTitle,
-  DialogContentText,
-  DialogContent,
-  DialogActions,
-  Divider,
-  Input,
-  OutlinedInput,
   Stack,
+  TextField,
+  OutlinedInput,
 } from "@mui/material";
-
-import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
-import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
-import { FormContext } from "../Context/FormContext"; // Import the FormContext
-import SwitchAccessShortcutAddIcon from "@mui/icons-material/SwitchAccessShortcutAdd";
-import Navegador from "./Navegador";
-import { NumericFormat } from "react-number-format";
+import SavingsRoundedIcon from "@mui/icons-material/SavingsRounded";
 import CreditCardIcon from "@mui/icons-material/CreditCard";
-import MaskExpiry from "./MaskExpiry";
-import LocalOfferIcon from "@mui/icons-material/LocalOffer";
-import EastIcon from "@mui/icons-material/East";
+import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
 import { DataGrid, GridColDef, GridRenderCellParams } from "@mui/x-data-grid";
-import { Plan, RawData, cuenta } from "../Interfaces/Tipos";
-import { planes, planesDolares, Bancos } from "../CustomData/Planes";
-import { InfoConsulta } from "../Data/GetDatosClientes";
-
-import LoyaltyIcon from '@mui/icons-material/Loyalty';
-import CreditScoreRoundedIcon from '@mui/icons-material/CreditScoreRounded';
-import SavingsRoundedIcon from '@mui/icons-material/SavingsRounded';
-import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
-import UpdateIcon from '@mui/icons-material/Update';
-import InputMask from 'react-input-mask';
-import { TextInputMask } from "react-native-masked-text";
-import { IMaskInput } from "react-imask";
+import { FormContext } from "../Context/FormContext";
+import { planes, Bancos } from "../CustomData/Planes";
+import { ClienteData, ClienteDataUpdate, cuenta, Plan } from "../Interfaces/Tipos";
 import useTwilio from "../Hooks/UseTwlo";
-import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
-import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
-import CircularProgress from '@mui/material/CircularProgress';
-import { wait } from "@testing-library/user-event/dist/utils";
-import { createVeriffFrame } from "@veriff/incontext-sdk";
-import VeriffDialog from "./VeriffDialog";
 import useExtractRawData from "../Hooks/useExtractRawData";
-import VeriffComponentClick from "./VeriffDialogClick";
-import VeriffComponent from "./VeriffDialog";
 import useValidateToken from "../Hooks/UseValidateTk";
 import VeriffComponentNew from "./VeriffDialogoNew";
 import VeriffStatusChecker from "./ValidateSession";
+import { useClienteContext } from "../Context/ClienteContext";
+import { IMaskInput } from "react-imask";
+import { InfoInsert1 } from "../Data/GetDatosClientes";
+import UseDeleteCard from "../Hooks/UseDeleteCard";
+import { useEditDialog } from "../Context/EditDialogContext";
+import EditDialog from "./EditDialog";
+
 
 interface Props {
   listCuentas: cuenta[];
 }
-
-// Create a new theme using Nunito Sans
-const theme = createTheme({
-  typography: {
-    fontFamily: "Nunito Sans, Roboto, sans-serif",
-  },
-  palette: {
-    primary: {
-      main: "#d8282f",
-    },
-    secondary: {
-      main: "#76777B",
-    },
-  },
-  shape: {
-    borderRadius: 13,
-  },
-});
-
-
-
-
 
 interface CustomProps {
   onChange: (event: { target: { name: string; value: string } }) => void;
@@ -100,138 +49,219 @@ const TextMaskCustom = React.forwardRef<HTMLInputElement, CustomProps>(
     return (
       <IMaskInput
         {...other}
-        mask="00/00"
+        mask="00/0000"
         definitions={{
-          '#': /[1-9]/,
+          "#": /[1-9]/,
         }}
         inputRef={ref}
-        onAccept={(value: any) => onChange({ target: { name: props.name, value } })}
+        onAccept={(value: any) =>
+          onChange({ target: { name: props.name, value } })
+        }
         overwrite
       />
     );
-  },
+  }
 );
 
-<Input />
 const Form1: React.FC<Props> = ({ listCuentas }) => {
   const { isValid, isOVP } = useValidateToken();
+  const { cliente } = useClienteContext();
+  const [reloadTrigger, setReloadTrigger] = useState(false);
+  const { deleteCard, loading, error } = UseDeleteCard();
+  const { formData, handleInputChange, handleSelectChange, setFormData } =
+    useContext(FormContext);
 
   const [veriffSessionId, setVeriffSessionId] = useState<string | null>(null);
   const [veriffStarted, setVeriffStarted] = useState(false);
   const [veriffApproved, setVeriffApproved] = useState(false);
   const [veriffError, setVeriffError] = useState(false);
+  const [veriffShouldCheck, setVeriffShouldCheck] = useState(false);
   const [showCardForm, setShowCardForm] = useState(false);
+  const { openDialog } = useEditDialog();
 
-  const maskCardNumber = (cardNumber: string) => {
-    return `•••• •••• •••• ${cardNumber.slice(-4)}`;
-  };
-  const handleEdit = (row: any) => {
-    alert(`Editing: ${JSON.stringify(row, null, 2)}`);
-  };
-
-// Function to handle delete action
-const handleDelete = (row: any) => {
-  alert(`Deleting: ${row.ID}`);
-};
-  
-
-  // Function to clean HTML tags from the Identidad field
-const cleanHTML = (htmlString: string) => {
-  const tempElement = document.createElement("div");
-  tempElement.innerHTML = htmlString;
-  return tempElement.textContent || tempElement.innerText || "";
-};
-
-// Define the columns
-// Define the columns
-const columns: GridColDef[] = [
-  { 
-    field: "Tarjeta", 
-    headerName: "Tarjeta", 
-    flex: 1, // Makes the column fill space dynamically
-    minWidth: 200,
-    valueGetter: (params) => maskCardNumber(params.row.Tarjeta) 
-  },
-  { 
-    field: "DiaDebito", 
-    headerName: "Día Débitos", 
-    flex: 1, 
-    minWidth: 120 
-  },
-  { 
-    field: "TipoDebito", 
-    headerName: "Tipo Débito", 
-    flex: 1, 
-    minWidth: 150, 
-    valueGetter: (params) => params.row.TipoDebito 
-  },
-  {
-    field: "actions",
-    headerName: "Actions",
-    flex: 1,
-    minWidth: 200,
-    sortable: false,
-    renderCell: (params: GridRenderCellParams) => (
-      <Stack direction="row" spacing={1} justifyContent="flex-end" width="100%">
-        <Button
-          variant="contained"
-          color="primary"
-          size="small"
-          onClick={() => handleEdit(params.row)}
-        >
-          Editar
-        </Button>
-        <Button
-          variant="contained"
-          color="secondary"
-          size="small"
-          onClick={() => handleAddCard()}
-        >
-          Agregar
-        </Button>
-      </Stack>
-    ),
-  },
-];
-  // Temp demo data
-
-
-
-
-  // Lógica del componente
-  const [code, setCode] = useState("");
-  const {enviarCode,enviandoCode,validarCode,confirmado,validandoCode,confirmadoError,setValidandoCode} = useTwilio();
-
-  const { formData, handleInputChange, handleSelectChange, setFormData } =
-  useContext(FormContext); // Use the FormContext
-
-const [moneda, setMoneda] = useState("L");
-
-  const [planSeleccionado, setPlanSeleccionado] = React.useState<Plan>(
-    planes[0]
+  const [planSeleccionado, setPlanSeleccionado] = useState<Plan>(planes[0]);
+  const [cuentaSeleccionada, setCuentaSeleccionada] = useState<cuenta>(
+    listCuentas.length > 0 ? listCuentas[0] : ({} as cuenta)
   );
 
-  const [cuentaSeleccionada, setCuentaSeleccionada] = React.useState<cuenta>(
-    listCuentas.length > 0 ? listCuentas[0] : {} as cuenta
-  );
-
-
-
-  // Use the custom hook
-  const { rawData, loadingData, errorData } = useExtractRawData({
+  const { rawData, loadingData } = useExtractRawData({
     cuenta: cuentaSeleccionada.cuenta,
+    trigger: reloadTrigger,
   });
 
+  const handleSubmit = async () => {
+    const cardData: ClienteData = {
+      Tarjeta: formData.cardnumber,
+      Aporte: formData.aporte,
+      Monto: formData.monto,
+      Contrato: cuentaSeleccionada.contrato,
+      MonedaCCI: cuentaSeleccionada.moneda,
+      DiaDebito: formData.diaDebito,
+      Identidad: "0601199002463",
+      CCI: cuentaSeleccionada.cuenta,
+      Email: cliente?.Correo ?? "",
+      NombreCliente: cliente?.Nombre ?? "",
+      Banco: formData.banco,
+      Vencimiento: formData.expiryDate.replace("/", ""),
+      TipoDebito: "TC",
+      Modalidad: cuentaSeleccionada.modalidad,
+    };
+  
+    console.log("Card data a enviar:", cardData);
+    InfoInsert1.InsertInfo(cardData);
+    setShowCardForm(false); // opcional, ocultar el form de tarjeta
+setReloadTrigger((prev) => !prev); // fuerza recarga del useEffect del hook
+    // Aquí puedes hacer el POST con 
+  };
 
+  const handleEdit = (row: any) => {
+    
+    openDialog({
+      ...row,
+      Contrato: cuentaSeleccionada.contrato,
+      Modalidad: cuentaSeleccionada.modalidad,
+      MonedaCCI: cuentaSeleccionada.moneda,
+      CCI: cuentaSeleccionada.cuenta,
+      Email: cliente?.Correo ?? "",
+      NombreCliente: cliente?.Nombre ?? "",
+      Identidad: "0601199002463",
+    });
+  };
+
+
+  useEffect(() => {
+    if (setFormData) {
+      setFormData((prev) => ({
+        ...prev,
+        prima: planSeleccionado.prima,
+        sumaAsegurada: planSeleccionado.sumaAsegurada,
+        cuenta: cuentaSeleccionada.cuenta,
+        moneda: cuentaSeleccionada.moneda,
+        aporte: cuentaSeleccionada.aporte.toString(),
+        contrato:cuentaSeleccionada.contrato,
+        modalidad:cuentaSeleccionada.modalidad
+      }));
+    }
+  }, [cuentaSeleccionada]);
+
+  useEffect(() => {
+    if (cliente && setFormData) {
+      setFormData((prev) => ({
+        ...prev,
+        nombre: cliente.Nombre,
+        email: cliente.Correo,
+      }));
+    }
+  }, [cliente]);
+
+  useEffect(() => {
+    if (veriffStarted && veriffSessionId && !veriffApproved && !veriffShouldCheck) {
+   
+      setVeriffShouldCheck(true);
+    }
+  }, [veriffStarted, veriffSessionId]);
+
+  const handleAddCard = () => setShowCardForm(true);
+
+ 
+  const maskCardNumber = (cardNumber: string) => `•••• •••• •••• ${cardNumber.slice(-4)}`;
+
+  //const handleEdit = (row: any) => alert(`Editando: ${JSON.stringify(row, null, 2)}`);
+  const handleDelete = async (row: any) => {
+  
+    const confirm = window.confirm("¿Estás seguro de eliminar esta tarjeta?");
+    if (!confirm) return;
+  
+    const cardToDelete: ClienteDataUpdate = {
+      ID: String(row.ID ?? ""),
+      Tarjeta: row.Tarjeta,
+      Aporte: "MENSUAL",
+      Monto:  String(row.Monto),
+      Contrato: cuentaSeleccionada.contrato,
+      MonedaCCI: cuentaSeleccionada.moneda,
+      DiaDebito: row.DiaDebito,
+      Identidad: "0601199002463", 
+      CCI: cuentaSeleccionada.cuenta,
+      Email: cliente?.Correo ?? "",
+      NombreCliente: cliente?.Nombre ?? "",
+      Banco: row.Banco || formData.banco, 
+      Vencimiento: row.FechaVencimiento?.replace("/", "") ?? "", 
+      TipoDebito: "TC",
+      Modalidad: cuentaSeleccionada.modalidad || "",
+      Estado: "I",
+    };
+  
+    
+    await deleteCard(cardToDelete);
+    setReloadTrigger((prev) => !prev); 
+    
+  };
+
+  const columns: GridColDef[] = [
+    {
+      field: "Tarjeta",
+      headerName: "Tarjeta",
+      flex: 1,
+      minWidth: 200,
+      valueGetter: (params) => maskCardNumber(params.row.Tarjeta),
+    },
+    {
+      field: "DiaDebito",
+      headerName: "Día Débito",
+      flex: 1,
+      minWidth: 120,
+    },
+    {
+      field: "TipoDebito",
+      headerName: "Tipo Débito",
+      flex: 1,
+      minWidth: 150,
+    },
+    {
+      field: "actions",
+      headerName: "Acciones",
+      flex: 1,
+      minWidth: 200,
+      sortable: false,
+      renderCell: (params: GridRenderCellParams) => (
+        <Stack direction="row" spacing={1} justifyContent="flex-end" width="100%">
+          <Button
+            variant="contained"
+            color="primary"
+            size="small"
+            onClick={() => handleEdit(params.row)}
+          >
+            Editar
+          </Button>
+          <Button
+            variant="contained"
+            color="secondary"
+            size="small"
+            onClick={() => handleAddCard()}
+          >
+            Agregar
+          </Button>
+          <Button
+          variant="contained"
+          color="error"
+          size="small"
+          onClick={() => handleDelete(params.row)}
+        >
+          Eliminar
+        </Button>
+        </Stack>
+      ),
+    },
+  ];
 
   const CustomNoRowsOverlay = ({ onAddCard }: { onAddCard: () => void }) => (
     <Box
       sx={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        height: '100%',
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        height: "100%",
         padding: 2,
       }}
     >
@@ -249,418 +279,221 @@ const [moneda, setMoneda] = useState("L");
     </Box>
   );
 
-
-  const [open, setOpen] = React.useState(false);
-
-  const handleClickOpen = () => {
-    setOpen(true);
-  };
-
-  const handleClose = () => {
-    setOpen(false);
-  };
-
-  const filterPlanes = (prima: number) => {
-    setPlanSeleccionado(planes.filter((plan) => plan.prima === prima)[0]);
-  };
-
-  const filterCuentas = (cuentaRecibida: string) => {
-    const foundCuenta = listCuentas.find((cuenta) => cuenta.cuenta === cuentaRecibida);
-
-    if (foundCuenta) {
-      setCuentaSeleccionada(foundCuenta);
-    } else {
-      console.error(`Cuenta no encontrada: ${cuentaRecibida}`);
-      // Handle the case where the cuenta is not found, e.g., setCuentaSeleccionada(null) or show an error message
-    }
-  }
-
-  const handleAddCard = () => {
-    setShowCardForm(true); // Esto muestra el formulario
-  };
-
-
-  const handleCODE = (codigo:string)=>{
-    setCode(codigo);
-    const largo = codigo.length;
-    
-    if (largo===6){
-      setValidandoCode(true);
-      validarCode("+50499787930",codigo);
-      console.log("6 Caracteres")
-    }
-    wait(3000).then(()=>{
-      setValidandoCode(false);
-      setCode("")
-    });
-   
-
-  }
-
-  useEffect(() => {
-    
-    if (setFormData) {
-      setFormData((prev) => ({
-        ...prev,
-        prima: planSeleccionado.prima,
-        sumaAsegurada: planSeleccionado.sumaAsegurada,
-        cuenta: cuentaSeleccionada.cuenta,
-        moneda: cuentaSeleccionada.moneda,
-        aporte: cuentaSeleccionada.aporte.toString(),
-      }));
-    }
-    setMoneda(cuentaSeleccionada.moneda);
-     // Call fetchDataForAccount when cuentaSeleccionada changes
-    
-  },[cuentaSeleccionada]);
-   
-  
- 
-  useEffect(() => {
-    
-
-    if (setFormData) {
-      setFormData((prev) => ({
-        ...prev,
-        prima: planSeleccionado.prima,
-        sumaAsegurada: planSeleccionado.sumaAsegurada,
-        cuenta: cuentaSeleccionada.cuenta,
-        moneda: cuentaSeleccionada.moneda,
-      }));
-    }
-    setMoneda(cuentaSeleccionada.moneda);
-  }, [planSeleccionado, cuentaSeleccionada]);
-
-
-
   return (
+    <>
     <form>
       {isOVP && (
-  <Grid container mt={5} mb={5}>
-    <Grid item xs={12}>
-      {(!veriffApproved || veriffError) && (
-        <VeriffComponentNew
-          onSessionCreated={setVeriffSessionId}
-          onVeriffStarted={() => {
-            setVeriffStarted(true);
-            setVeriffError(false); // limpiar error al intentar de nuevo
-          }}
-        />
-      )}
-    </Grid>
-
-    {veriffSessionId && veriffStarted && (
-    
-    <VeriffStatusChecker
-        sessionId={veriffSessionId}
-        onApproved={() => setVeriffApproved(true)}
-        onRejected={() => {
-          setVeriffError(true);
-          setVeriffStarted(false); 
-        }}
-      />
-    )}
-  </Grid>
-)}
-       {(veriffApproved || !isOVP) && (<Grid container spacing={2} rowSpacing={4} top={4} mb={5}>
-        <Grid item xs={12}>
-          <FormControl variant="outlined" fullWidth>
-            <InputLabel id="cuenta-label">Selecciona tu cuenta</InputLabel>
-            <Select
-              labelId="cuenta-label"
-              id="cuenta"
-              required
-              name="cuenta"
-              label="Selecciona tu cuenta"
-              onChange={(e, value) => filterCuentas(e.target.value as string)}
-              value={formData?.cuenta || ""}
-              startAdornment={
-                <InputAdornment position="start">
-                  <SavingsRoundedIcon sx={{color:theme.palette.primary.main}}/>
-                </InputAdornment>
-              }
-
-            >
-              {listCuentas.map((cuenta) => (
-      <MenuItem value={cuenta.cuenta} key={cuenta.cuenta}>
-        {cuenta.cuenta}
-      </MenuItem>
-    ))}
-            </Select>
-          </FormControl>
-        </Grid>
-
-        {/* APORTE */}
-       
-        
-        
-
-        <Grid item xs={12}>
-          <Grid
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              flexWrap: "wrap",
-              flexDirection: "row",
-              alignContent: "center",
-            }}
-            gap={1}
-            mb={2}
-          >
-            {/* <LoyaltyIcon color="primary" fontSize="small" /> */}
-   
+        <Grid container mt={5} mb={5}>
+          <Grid item xs={12}>
+            {(!veriffApproved || veriffError) && (
+              <VeriffComponentNew
+                onSessionCreated={setVeriffSessionId}
+                onVeriffStarted={() => {
+                  setVeriffStarted(true);
+                  setVeriffError(false);
+                }}
+              />
+            )}
           </Grid>
 
-          {/* <Box
-            sx={{
-              width: "90%",
-              textAlign: "center",
-              justifyContent: "center",
-              alignItems: "center",
-              alignContent: "center",
-              margin: "auto",
-            }}
-            mb={2}
-          >
-            <Slider
-              aria-label="Small steps"
-              defaultValue={0}
-              aria-valuetext={"valuetex"}
-              onChange={(e, value) => filterPlanes(value as number)}
-              marks={planes.map((value) => ({
-                value: value.prima,
-                label: `${moneda} ${value.prima}`,
-              }))}
-              min={Math.min(...planes.map((o) => o.prima))}
-              max={Math.max(...planes.map((o) => o.prima))}
-              step={null}
-              valueLabelDisplay="auto"
-              sx={{ display: { xs: "none", md: "block" } }}
+          {veriffShouldCheck && veriffSessionId && (
+            <VeriffStatusChecker
+              sessionId={veriffSessionId}
+              onApproved={() => {
+                setVeriffApproved(true);
+                setVeriffShouldCheck(false);
+              }}
+              onRejected={() => {
+                setVeriffError(true);
+                setVeriffShouldCheck(false);
+              }}
             />
-          </Box> */}
-          
-          
+          )}
         </Grid>
+      )}
 
-        <Grid item xs={12} sm={12}>
-        <Typography
-            variant="h6"
-            align="justify"
-            color={theme.palette.secondary.main}
-          >
-            Tus medios de pago:
-          </Typography>
-          <DataGrid
-  rows={rawData}
-  columns={columns}
-  getRowId={(row) => row.ID}
-  autoHeight
-  disableColumnMenu
-  disableRowSelectionOnClick
-  hideFooterPagination={rawData.length <= 5}
-  pageSizeOptions={[5, 10]}
-  components={{
-    NoRowsOverlay: () => <CustomNoRowsOverlay onAddCard={handleAddCard} />
-  }}
-/>
+      {(veriffApproved || isOVP) && (
+        <Grid container spacing={2} rowSpacing={4} top={4} mb={5}>
+          <Grid item xs={12}>
+            <FormControl variant="outlined" fullWidth>
+              <InputLabel id="cuenta-label">Selecciona tu cuenta</InputLabel>
+              <Select
+                labelId="cuenta-label"
+                id="cuenta"
+                required
+                name="cuenta"
+                label="Selecciona tu cuenta"
+                onChange={(e) => {
+                  const cuenta = e.target.value;
+                  const encontrada = listCuentas.find((c) => c.cuenta === cuenta);
+                  if (encontrada) setCuentaSeleccionada(encontrada);
+                }}
+                value={formData?.cuenta || ""}
+                startAdornment={
+                  <InputAdornment position="start">
+                    <SavingsRoundedIcon />
+                  </InputAdornment>
+                }
+              >
+                {listCuentas.map((cuenta) => (
+                  <MenuItem value={cuenta.cuenta} key={cuenta.cuenta}>
+                    {cuenta.cuenta}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
           </Grid>
 
+          <Grid item xs={12} sm={12}>
+            <Typography variant="h6" color="primary" sx={{ mb: 2 }}>
+              Tus métodos de pago:
+            </Typography>
+            <DataGrid
+              rows={rawData}
+              columns={columns}
+              getRowId={(row) => row.ID}
+              autoHeight
+              disableColumnMenu
+              disableRowSelectionOnClick
+              hideFooterPagination={rawData.length <= 5}
+              pageSizeOptions={[5, 10]}
+              components={{
+                NoRowsOverlay: () => (
+                  <CustomNoRowsOverlay onAddCard={handleAddCard} />
+                ),
+              }}
+            />
+          </Grid>
 
-      {/*<Grid item xs={12} sm={12}>
-          <Typography
-            variant="h6"
-            align="justify"
-            color={theme.palette.secondary.main}
-          >
-            Actualiza tu forma de pago: {formData.formaPago}
-          </Typography>
-
-          <br />
-          <FormControl fullWidth>
-            <InputLabel>Forma de Pago</InputLabel>
-            <Select
-              multiple={false}
-              label="Forma de Pago"
-              name="formaPago"
-              defaultValue="Carné"
-              value={formData.formaPago}
-              onChange={handleSelectChange}
-              startAdornment={
-                <InputAdornment position="start">
-                  <UpdateIcon sx={{color:theme.palette.primary.main}}/>
-                </InputAdornment>
-              }
-            >
-              <MenuItem value="Carné">Carné</MenuItem>
-              <MenuItem value="Débito a Tarjeta">Débito a Tarjeta</MenuItem>
-            </Select>
-          </FormControl>
-        </Grid>*/}
-             {/*{formData.formaPago === "Débito a Tarjeta" && (
-          <>*/}
-            {showCardForm && (
-  <>
-    <Grid item xs={12} sm={6}>
-      <TextField
-        id="cardnumber"
-        name="cardnumber"
-        label="Número de la Tarjeta"
-        variant="outlined"
-        type="number"
-        value={parseInt(formData?.cardnumber)}
-        onChange={handleInputChange}
-        fullWidth
-        InputProps={{
-          startAdornment: (
-            <InputAdornment position="start">
-              <CreditCardIcon sx={{ color: theme.palette.primary.main }} />
-            </InputAdornment>
-          ),
-        }}
-        required
-      />
-    </Grid>
-
-   
-
-            <Grid item xs={6} sm={3}>
-              <FormControl>
-                {/* <MaskExpiry
-                  id="expiryDate"
-                  label="Fecha de vencimiento"
-                  placeholder="MM / YY"
+          {showCardForm && (
+            <>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  id="cardnumber"
+                  name="cardnumber"
+                  label="Número de la Tarjeta"
                   variant="outlined"
-                  ref={ref}
-  inputRef={inputRef}  
-                  
-                  value={formData.expiryDate}
-                  name="expiryDate"
-
-                  
+                  type="number"
+                  value={formData?.cardnumber || ""}
+                  onChange={handleInputChange}
                   fullWidth
-                /> */}
-                <InputLabel>Fecha de Expiración</InputLabel>
-                <OutlinedInput
-          
-          value={formData.expiryDate}
-          label="Fecha de Expiración"
-          onChange={handleInputChange}
-          placeholder="MM/YY"
-          name="expiryDate"
-          id="expiryDate"
-          
-          inputComponent={TextMaskCustom as any}
-        />
-              </FormControl>
-            </Grid>
-            <Grid item xs={6} sm={3}>
-              <FormControl fullWidth>
-                <InputLabel>Día del débito</InputLabel>
-                <Select
-                  multiple={false}
-                  label="Día del débito"
-                  name="diaDebito"
-                  value={formData.diaDebito}
-                  onChange={handleSelectChange}
-                  defaultValue="15"
-                >
-                  {[
-                    "2",
-                    "3",
-                    "4",
-                    "5",
-                    "6",
-                    "7",
-                    "8",
-                    "9",
-                    "10",
-                    "11",
-                    "12",
-                    "13",
-                    "14",
-                    "15",
-                    "16",
-                    "17",
-                    "18",
-                    "19",
-                    "20",
-                    "21",
-                    "22",
-                    "23",
-                    "24",
-                    "25",
-                    "26",
-                    "27",
-                    "28",
-                  ].map((value) => {
-                    return (
-                      <MenuItem value={value} key={value}>
-                        {value}
-                      </MenuItem>
-                    );
-                  })}
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid item xs={12} sm={12} >
-         
-         
-          <FormControl fullWidth>
-            <InputLabel>Banco Emisor</InputLabel>
-            <Select
-              multiple={false}
-              label="Banco Emisor"
-              name="banco"
-              value={formData.banco}
-              onChange={handleSelectChange}
-              startAdornment={
-                <InputAdornment position="start">
-                  <AccountBalanceIcon sx={{color:theme.palette.primary.main}}/>
-                </InputAdornment>
-              }
-            >
-              {
-                Bancos.map((banco) => {
-                  return (
-                    <MenuItem value={banco} key={banco}>
-                      {banco}
-                    </MenuItem>
-                  );
-                })
-              }
-              
-            </Select>
-          </FormControl>
-        </Grid>
-        <Grid item xs={12} sx={{ mt: 2 }}>
-  <Button
-    variant="contained"
-    color="primary"
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <CreditCardIcon />
+                      </InputAdornment>
+                    ),
+                  }}
+                  required
+                />
+              </Grid>
+
+              <Grid item xs={6} sm={3}>
+                <FormControl fullWidth>
+                  <InputLabel>Fecha de Expiración</InputLabel>
+                  <OutlinedInput
+                    value={formData.expiryDate}
+                    label="Fecha de Expiración"
+                    onChange={handleInputChange}
+                    placeholder="MM/YYYY"
+                    name="expiryDate"
+                    id="expiryDate"
+                    inputComponent={TextMaskCustom as any}
+                  />
+                </FormControl>
+              </Grid>
+              <Grid item xs={6} sm={3}>
+  <TextField
+    id="monto"
+    name="monto"
+    label="Monto del Aporte"
+    variant="outlined"
+    type="number"
+    value={formData.monto}
+    onChange={handleInputChange}
     fullWidth
-    onClick={() => {
-      // Aquí puedes manejar el envío, validación o guardar los datos
-      console.log("Formulario enviado:", formData);
-    }}
-  >
-    Enviar
-  </Button>
+    required
+  />
 </Grid>
-         
-  </>
-)}
-        {/*  </>
-        )}*/}
-       
+              <Grid item xs={12} sm={4}>
+                <FormControl fullWidth>
+                  <InputLabel>Día del débito</InputLabel>
+                  <Select
+                    label="Día del débito"
+                    name="diaDebito"
+                    value={formData.diaDebito}
+                    onChange={handleSelectChange}
+                  >
+                    {[...Array(27)].map((_, i) => {
+                      const val = (i + 2).toString();
+                      return (
+                        <MenuItem value={val} key={val}>
+                          {val}
+                        </MenuItem>
+                      );
+                    })}
+                  </Select>
+                </FormControl>
+              </Grid>
 
-      
-       
-      </Grid>
+              <Grid item xs={12} sm={4}>
+    <FormControl fullWidth>
+      <InputLabel>Tipo de Aporte</InputLabel>
+      <Select
+        label="Tipo de Aporte"
+        name="aporte"
+        value={formData.aporte}
+        onChange={handleSelectChange}
+      >
+        <MenuItem value="">Seleccionar...</MenuItem>
+        <MenuItem value="MENSUAL">MENSUAL</MenuItem>
+        <MenuItem value="UNICO">ÚNICO</MenuItem>
+      </Select>
+    </FormControl>
+  </Grid>
 
-      
-     )}
+              <Grid item xs={12} sm={4}>
+                <FormControl fullWidth>
+                  <InputLabel>Banco Emisor</InputLabel>
+                  <Select
+                    label="Banco Emisor"
+                    name="banco"
+                    value={formData.banco}
+                    onChange={handleSelectChange}
+                    startAdornment={
+                      <InputAdornment position="start">
+                        <AccountBalanceIcon />
+                      </InputAdornment>
+                    }
+                  >
+                    {Bancos.map((banco) => (
+                      <MenuItem value={banco} key={banco}>
+                        {banco}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+
+              <Grid item xs={12} sx={{ mt: 2 }}>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  fullWidth
+                  onClick={handleSubmit}
+                >
+                  Ingresar
+                </Button>
+              </Grid>
+            </>
+          )}
+        </Grid>
+      )}
     </form>
-    
+    <EditDialog onUpdateSuccess={() => setReloadTrigger((prev) => !prev)} />
+    </>
   );
 };
 
 export default Form1;
+
