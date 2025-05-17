@@ -15,11 +15,11 @@ const UseDeleteCard = () => {
         ...cardData,
         Estado: 'I', // soft delete
       };
-          console.log("Esta es nueva",payload)
+          
       await InfoActualiza1.UpdateInfo(payload);
     } catch (err) {
       setError('Error al eliminar la tarjeta');
-      console.error(err);
+      
     } finally {
       setLoading(false);
     }

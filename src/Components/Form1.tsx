@@ -13,6 +13,8 @@ import {
   Stack,
   TextField,
   OutlinedInput,
+  Snackbar,
+  Alert,
 } from "@mui/material";
 import SavingsRoundedIcon from "@mui/icons-material/SavingsRounded";
 import CreditCardIcon from "@mui/icons-material/CreditCard";
@@ -21,7 +23,6 @@ import { DataGrid, GridColDef, GridRenderCellParams } from "@mui/x-data-grid";
 import { FormContext } from "../Context/FormContext";
 import { planes, Bancos } from "../CustomData/Planes";
 import { ClienteData, ClienteDataUpdate, cuenta, Plan } from "../Interfaces/Tipos";
-import useTwilio from "../Hooks/UseTwlo";
 import useExtractRawData from "../Hooks/useExtractRawData";
 import useValidateToken from "../Hooks/UseValidateTk";
 import VeriffComponentNew from "./VeriffDialogoNew";
@@ -32,10 +33,15 @@ import { InfoInsert1 } from "../Data/GetDatosClientes";
 import UseDeleteCard from "../Hooks/UseDeleteCard";
 import { useEditDialog } from "../Context/EditDialogContext";
 import EditDialog from "./EditDialog";
-
+import ConfirmDialog from './ConfirmDialog';
+import { useConfirmDialog } from '../Hooks/UseConfirmDialog';
+import { useCardValidator } from "../Hooks/useCardValidator";
+import { initialFormData } from "../Context/FormContext";
+import FullscreenLoader from '../Components/FullscreenLoader';
 
 interface Props {
   listCuentas: cuenta[];
+  id: string | null;
 }
 
 interface CustomProps {
@@ -63,14 +69,18 @@ const TextMaskCustom = React.forwardRef<HTMLInputElement, CustomProps>(
   }
 );
 
-const Form1: React.FC<Props> = ({ listCuentas }) => {
+const Form1: React.FC<Props> = ({ listCuentas, id } ) => {
   const { isValid, isOVP } = useValidateToken();
   const { cliente } = useClienteContext();
   const [reloadTrigger, setReloadTrigger] = useState(false);
   const { deleteCard, loading, error } = UseDeleteCard();
+  const [showLoader, setShowLoader] = useState(false);
+
   const { formData, handleInputChange, handleSelectChange, setFormData } =
     useContext(FormContext);
-
+const [montoError, setMontoError] = useState<string | null>(null);
+const [cardErrors, setCardErrors] = useState<{ cardNumber?: string; expiryDate?: string }>({});
+const { validateCard } = useCardValidator();
   const [veriffSessionId, setVeriffSessionId] = useState<string | null>(null);
   const [veriffStarted, setVeriffStarted] = useState(false);
   const [veriffApproved, setVeriffApproved] = useState(false);
@@ -78,18 +88,39 @@ const Form1: React.FC<Props> = ({ listCuentas }) => {
   const [veriffShouldCheck, setVeriffShouldCheck] = useState(false);
   const [showCardForm, setShowCardForm] = useState(false);
   const { openDialog } = useEditDialog();
-
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState("");
   const [planSeleccionado, setPlanSeleccionado] = useState<Plan>(planes[0]);
   const [cuentaSeleccionada, setCuentaSeleccionada] = useState<cuenta>(
     listCuentas.length > 0 ? listCuentas[0] : ({} as cuenta)
   );
-
+  
+const { loading: formLoading, setLoading } = useContext(FormContext);
   const { rawData, loadingData } = useExtractRawData({
     cuenta: cuentaSeleccionada.cuenta,
     trigger: reloadTrigger,
   });
+  const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
-  const handleSubmit = async () => {
+  const confirmAddCard = async () => {
+
+    const monto = parseFloat(formData.monto);
+  const moneda = formData.monedaDebito;
+
+  
+  if (
+    (moneda === 'LEMPIRAS' && monto < 250) ||
+    (moneda === 'DÓLARES' && monto < 20)
+  ) {
+    setMontoError(
+      moneda === 'LEMPIRAS'
+        ? 'El monto mínimo para Lempiras es L 250'
+        : 'El monto mínimo para Dólares es $ 20'
+    );
+    return; 
+  }
+
+  setMontoError(null); 
     const cardData: ClienteData = {
       Tarjeta: formData.cardnumber,
       Aporte: formData.aporte,
@@ -97,7 +128,7 @@ const Form1: React.FC<Props> = ({ listCuentas }) => {
       Contrato: cuentaSeleccionada.contrato,
       MonedaCCI: cuentaSeleccionada.moneda,
       DiaDebito: formData.diaDebito,
-      Identidad: "0601199002463",
+      Identidad: id || "",
       CCI: cuentaSeleccionada.cuenta,
       Email: cliente?.Correo ?? "",
       NombreCliente: cliente?.Nombre ?? "",
@@ -105,13 +136,30 @@ const Form1: React.FC<Props> = ({ listCuentas }) => {
       Vencimiento: formData.expiryDate.replace("/", ""),
       TipoDebito: "TC",
       Modalidad: cuentaSeleccionada.modalidad,
+      MonedaDebito:formData.monedaDebito
     };
+  const errors = validateCard(formData.cardnumber);
+ 
+if (Object.keys(errors).length > 0) {
+  setCardErrors(errors);
+  return;
+}
+ setShowLoader(true);
+setCardErrors({});
+    await InfoInsert1.InsertInfo(cardData);
+    setShowCardForm(false);
+    await delay(3000);
+    setReloadTrigger((prev) => !prev);
+    
+    setSnackbarMessage("¡Tarjeta registrada con éxito!");
+  setSnackbarOpen(true);
+  setFormData?.(initialFormData);
+setCardErrors({});
+setMontoError(null);
+ setShowLoader(false);
   
-    console.log("Card data a enviar:", cardData);
-    InfoInsert1.InsertInfo(cardData);
-    setShowCardForm(false); // opcional, ocultar el form de tarjeta
-setReloadTrigger((prev) => !prev); // fuerza recarga del useEffect del hook
-    // Aquí puedes hacer el POST con 
+
+
   };
 
   const handleEdit = (row: any) => {
@@ -124,7 +172,7 @@ setReloadTrigger((prev) => !prev); // fuerza recarga del useEffect del hook
       CCI: cuentaSeleccionada.cuenta,
       Email: cliente?.Correo ?? "",
       NombreCliente: cliente?.Nombre ?? "",
-      Identidad: "0601199002463",
+      Identidad: id||"",
     });
   };
 
@@ -160,6 +208,14 @@ setReloadTrigger((prev) => !prev); // fuerza recarga del useEffect del hook
       setVeriffShouldCheck(true);
     }
   }, [veriffStarted, veriffSessionId]);
+  useEffect(() => {
+  if (rawData.length === 0) {
+    setShowCardForm(true);
+  }
+}, [rawData]);
+useEffect(() => {
+  setShowLoader(loadingData);
+}, [loadingData]);
 
   const handleAddCard = () => setShowCardForm(true);
 
@@ -167,35 +223,56 @@ setReloadTrigger((prev) => !prev); // fuerza recarga del useEffect del hook
   const maskCardNumber = (cardNumber: string) => `•••• •••• •••• ${cardNumber.slice(-4)}`;
 
   //const handleEdit = (row: any) => alert(`Editando: ${JSON.stringify(row, null, 2)}`);
-  const handleDelete = async (row: any) => {
-  
-    const confirm = window.confirm("¿Estás seguro de eliminar esta tarjeta?");
-    if (!confirm) return;
-  
-    const cardToDelete: ClienteDataUpdate = {
+  const handleDelete = (row: any) => {
+    const cardData: ClienteDataUpdate = {
       ID: String(row.ID ?? ""),
       Tarjeta: row.Tarjeta,
       Aporte: "MENSUAL",
-      Monto:  String(row.Monto),
+      Monto: String(row.Monto),
       Contrato: cuentaSeleccionada.contrato,
       MonedaCCI: cuentaSeleccionada.moneda,
       DiaDebito: row.DiaDebito,
-      Identidad: "0601199002463", 
+      Identidad: id ?? "",
       CCI: cuentaSeleccionada.cuenta,
       Email: cliente?.Correo ?? "",
       NombreCliente: cliente?.Nombre ?? "",
-      Banco: row.Banco || formData.banco, 
-      Vencimiento: row.FechaVencimiento?.replace("/", "") ?? "", 
+      Banco: row.Banco || formData.banco,
+      Vencimiento: row.FechaVencimiento?.replace("/", "") ?? "",
       TipoDebito: "TC",
       Modalidad: cuentaSeleccionada.modalidad || "",
+      MonedaDebito:row.MonedaDebito || formData.monedaDebito,
       Estado: "I",
+
     };
   
-    
-    await deleteCard(cardToDelete);
-    setReloadTrigger((prev) => !prev); 
-    
+    showConfirm({
+      title: "Confirmar eliminación",
+      message: "¿Estás seguro de eliminar?",
+      confirmButtonText: "Eliminar",
+      confirmColor: "error",
+      onConfirm: async () => {
+        setShowLoader(true);
+        await deleteCard(cardData);
+      
+        setReloadTrigger((prev) => !prev);
+        setShowLoader(false);
+        setSnackbarMessage("¡Tarjeta eliminada con éxito!");
+        setSnackbarOpen(true);
+        
+      }
+    });
   };
+
+  const {
+    open: confirmOpen,
+    loading: confirmLoading,
+    options: confirmOptions,
+    showConfirm,
+    handleCancel: handleConfirmCancel,
+    handleConfirm: handleConfirmExecute
+  } = useConfirmDialog();
+
+  
 
   const columns: GridColDef[] = [
     {
@@ -218,6 +295,20 @@ setReloadTrigger((prev) => !prev); // fuerza recarga del useEffect del hook
       minWidth: 150,
     },
     {
+      field: "MonedaDebitoMonto",
+      headerName: "Monto",
+      flex: 1,
+      minWidth: 150,
+      valueGetter: (params) => {
+    const simbolo = params.row.MonedaDebito === 'LEMPIRAS' ? 'L' : '$';
+    const monto = Number(params.row.Monto) || 0;
+    return `${simbolo} ${monto.toLocaleString('en-US', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    })}`;
+    },
+    },
+    {
       field: "actions",
       headerName: "Acciones",
       flex: 1,
@@ -233,14 +324,7 @@ setReloadTrigger((prev) => !prev); // fuerza recarga del useEffect del hook
           >
             Editar
           </Button>
-          <Button
-            variant="contained"
-            color="secondary"
-            size="small"
-            onClick={() => handleAddCard()}
-          >
-            Agregar
-          </Button>
+          
           <Button
           variant="contained"
           color="error"
@@ -281,6 +365,8 @@ setReloadTrigger((prev) => !prev); // fuerza recarga del useEffect del hook
 
   return (
     <>
+     
+    {showLoader && <FullscreenLoader message="Procesando..." />}
     <form>
       {isOVP && (
         <Grid container mt={5} mb={5}>
@@ -292,6 +378,7 @@ setReloadTrigger((prev) => !prev); // fuerza recarga del useEffect del hook
                   setVeriffStarted(true);
                   setVeriffError(false);
                 }}
+                id={id}
               />
             )}
           </Grid>
@@ -312,7 +399,7 @@ setReloadTrigger((prev) => !prev); // fuerza recarga del useEffect del hook
         </Grid>
       )}
 
-      {(veriffApproved || isOVP) && (
+      {(!isOVP || (isOVP && veriffApproved))  && (
         <Grid container spacing={2} rowSpacing={4} top={4} mb={5}>
           <Grid item xs={12}>
             <FormControl variant="outlined" fullWidth>
@@ -344,30 +431,40 @@ setReloadTrigger((prev) => !prev); // fuerza recarga del useEffect del hook
             </FormControl>
           </Grid>
 
-          <Grid item xs={12} sm={12}>
-            <Typography variant="h6" color="primary" sx={{ mb: 2 }}>
-              Tus métodos de pago:
-            </Typography>
-            <DataGrid
-              rows={rawData}
-              columns={columns}
-              getRowId={(row) => row.ID}
-              autoHeight
-              disableColumnMenu
-              disableRowSelectionOnClick
-              hideFooterPagination={rawData.length <= 5}
-              pageSizeOptions={[5, 10]}
-              components={{
-                NoRowsOverlay: () => (
-                  <CustomNoRowsOverlay onAddCard={handleAddCard} />
-                ),
-              }}
-            />
-          </Grid>
+        <Grid item xs={12} sm={12}>
+  <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+    <Typography variant="h6" color="primary">
+      Tus métodos de pago:
+    </Typography>
+    {rawData.length > 0 && (
+      <Button
+        variant="contained"
+        color="primary"
+        startIcon={<CreditCardIcon />}
+        onClick={handleAddCard}
+      >
+        Agregar método de pago
+      </Button>
+    )}
+  </Box>
+
+  {rawData.length > 0 && (
+    <DataGrid
+      rows={rawData}
+      columns={columns}
+      getRowId={(row) => row.ID}
+      autoHeight
+      disableColumnMenu
+      disableRowSelectionOnClick
+      hideFooterPagination={rawData.length <= 5}
+      pageSizeOptions={[5, 10]}
+    />
+  )}
+</Grid>
 
           {showCardForm && (
             <>
-              <Grid item xs={12} sm={6}>
+              <Grid item xs={12} sm={4}>
                 <TextField
                   id="cardnumber"
                   name="cardnumber"
@@ -377,7 +474,10 @@ setReloadTrigger((prev) => !prev); // fuerza recarga del useEffect del hook
                   value={formData?.cardnumber || ""}
                   onChange={handleInputChange}
                   fullWidth
+                  error={!!cardErrors.cardNumber}
+                 helperText={cardErrors.cardNumber}
                   InputProps={{
+                    
                     startAdornment: (
                       <InputAdornment position="start">
                         <CreditCardIcon />
@@ -387,71 +487,21 @@ setReloadTrigger((prev) => !prev); // fuerza recarga del useEffect del hook
                   required
                 />
               </Grid>
-
-              <Grid item xs={6} sm={3}>
-                <FormControl fullWidth>
-                  <InputLabel>Fecha de Expiración</InputLabel>
-                  <OutlinedInput
-                    value={formData.expiryDate}
-                    label="Fecha de Expiración"
-                    onChange={handleInputChange}
-                    placeholder="MM/YYYY"
-                    name="expiryDate"
-                    id="expiryDate"
-                    inputComponent={TextMaskCustom as any}
-                  />
-                </FormControl>
-              </Grid>
-              <Grid item xs={6} sm={3}>
-  <TextField
-    id="monto"
-    name="monto"
-    label="Monto del Aporte"
-    variant="outlined"
-    type="number"
-    value={formData.monto}
-    onChange={handleInputChange}
-    fullWidth
-    required
-  />
-</Grid>
               <Grid item xs={12} sm={4}>
-                <FormControl fullWidth>
-                  <InputLabel>Día del débito</InputLabel>
-                  <Select
-                    label="Día del débito"
-                    name="diaDebito"
-                    value={formData.diaDebito}
-                    onChange={handleSelectChange}
-                  >
-                    {[...Array(27)].map((_, i) => {
-                      const val = (i + 2).toString();
-                      return (
-                        <MenuItem value={val} key={val}>
-                          {val}
-                        </MenuItem>
-                      );
-                    })}
-                  </Select>
-                </FormControl>
+                 <FormControl fullWidth variant="outlined">
+    <InputLabel shrink htmlFor="expiryDate">Fecha de Expiración</InputLabel>
+    <OutlinedInput
+      id="expiryDate"
+      name="expiryDate"
+      label="Fecha de Expiración"
+      placeholder="MM/YYYY"
+      value={formData.expiryDate}
+      onChange={handleInputChange}
+      notched 
+      inputComponent={TextMaskCustom as any}
+    />
+  </FormControl>
               </Grid>
-
-              <Grid item xs={12} sm={4}>
-    <FormControl fullWidth>
-      <InputLabel>Tipo de Aporte</InputLabel>
-      <Select
-        label="Tipo de Aporte"
-        name="aporte"
-        value={formData.aporte}
-        onChange={handleSelectChange}
-      >
-        <MenuItem value="">Seleccionar...</MenuItem>
-        <MenuItem value="MENSUAL">MENSUAL</MenuItem>
-        <MenuItem value="UNICO">ÚNICO</MenuItem>
-      </Select>
-    </FormControl>
-  </Grid>
-
               <Grid item xs={12} sm={4}>
                 <FormControl fullWidth>
                   <InputLabel>Banco Emisor</InputLabel>
@@ -474,13 +524,81 @@ setReloadTrigger((prev) => !prev); // fuerza recarga del useEffect del hook
                   </Select>
                 </FormControl>
               </Grid>
+              <Grid item xs={12} sm={4}>
+  <FormControl fullWidth>
+    <TextField
+      id="monto"
+      name="monto"
+      label="Monto del Aporte"
+      variant="outlined"
+      type="number"
+      value={formData.monto}
+      onChange={handleInputChange}
+      fullWidth
+      required
+      error={!!montoError}
+      helperText={montoError}
+      InputLabelProps={{ shrink: true }}  // 👈 esto resuelve el problema
+    />
+  </FormControl>
+</Grid>
+<Grid item xs={12} sm={4}>
+    <FormControl fullWidth>
+      <InputLabel>Tipo de Aporte</InputLabel>
+      <Select
+        label="Tipo de Aporte"
+        name="aporte"
+        value={formData.aporte}
+        onChange={handleSelectChange}
+      >
+        <MenuItem value="MENSUAL">Mensual</MenuItem>
+        <MenuItem value="UNICO">Único</MenuItem>
+      </Select>
+    </FormControl>
+  </Grid>
 
+              <Grid item xs={12} sm={4}>
+                <FormControl fullWidth>
+                  <InputLabel>Día del débito</InputLabel>
+                  <Select
+                    label="Día del débito"
+                    name="diaDebito"
+                    value={formData.diaDebito}
+                    onChange={handleSelectChange}
+                  >
+                    {[...Array(27)].map((_, i) => {
+                      const val = (i + 2).toString();
+                      return (
+                        <MenuItem value={val} key={val}>
+                          {val}
+                        </MenuItem>
+                      );
+                    })}
+                  </Select>
+                </FormControl>
+              </Grid>
+
+              
+       
+              
+
+ 
+              
+              
               <Grid item xs={12} sx={{ mt: 2 }}>
                 <Button
                   variant="contained"
                   color="primary"
                   fullWidth
-                  onClick={handleSubmit}
+                  onClick={() =>
+                    showConfirm({
+                      title: "Confirmar registro",
+                      message: "¿Deseas registrar?",
+                      confirmButtonText: "Registrar",
+                      confirmColor: "success",
+                      onConfirm: confirmAddCard,
+                    })
+                  }
                 >
                   Ingresar
                 </Button>
@@ -491,6 +609,27 @@ setReloadTrigger((prev) => !prev); // fuerza recarga del useEffect del hook
       )}
     </form>
     <EditDialog onUpdateSuccess={() => setReloadTrigger((prev) => !prev)} />
+    <ConfirmDialog
+  open={confirmOpen}
+  loading={confirmLoading}
+  options={confirmOptions}
+  onCancel={handleConfirmCancel}
+  onConfirm={handleConfirmExecute}
+/>
+<Snackbar
+  open={snackbarOpen}
+  autoHideDuration={3000}
+  onClose={() => setSnackbarOpen(false)}
+  anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+>
+  <Alert
+    onClose={() => setSnackbarOpen(false)}
+    severity="success"
+    sx={{ width: '100%' }}
+  >
+    {snackbarMessage}
+  </Alert>
+</Snackbar>
     </>
   );
 };

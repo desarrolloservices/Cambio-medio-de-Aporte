@@ -21,6 +21,7 @@ export interface FormData {
   banco:string;
   cel:string;
   monto:string;
+  monedaDebito:string;
 }
 
 export interface FormContextProps {
@@ -37,6 +38,9 @@ export interface FormContextProps {
     e: React.ChangeEvent<HTMLInputElement>,
     checked: boolean
   ) => void;
+
+  loading: boolean;
+  setLoading: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 // Crear el Contexto
@@ -46,6 +50,7 @@ const FormContext = createContext({} as FormContextProps);
 const FormProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
+  const [loading, setLoading] = useState(false);
   const [activeStep, setActiveStep] = useState(0);
   const [formData, setFormData] = useState({
     aporte: "",
@@ -65,13 +70,15 @@ const FormProvider: React.FC<{ children: React.ReactNode }> = ({
     sumaAsegurada: 0,
     banco:"",
     cel:"",
-    monto:""
+    monto:"",
+    monedaDebito:"",
   });
 
+   
+
   const handleInputChange = (event: any) => {
-    console.log("Input Changging...");
+   
     
-    console.log(formData);
     const { name, value } = event.target;
     setFormData((prevFormData) => ({
       ...prevFormData,
@@ -80,7 +87,7 @@ const FormProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   const handleSelectChange = (event: SelectChangeEvent) => {
-    console.log(event.target.value);
+   
     const { name, value } = event.target;
     setFormData((prevFormData) => ({
       ...prevFormData,
@@ -96,7 +103,7 @@ const FormProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   const handleToggle = (event: any) => {
-    console.log(JSON.stringify(formData));
+   
     const { checked } = event.target;
     const { name } = event.target;
     setFormData((prevFormData) => ({
@@ -132,11 +139,37 @@ const FormProvider: React.FC<{ children: React.ReactNode }> = ({
         setFormData,
         handleGeneroChange,
         handleToggle,
+        loading,
+    setLoading,
+
       }}
     >
       {children}
     </FormContext.Provider>
   );
 };
+
+export const initialFormData: FormData = {
+  aporte: "",
+  aporte_nuevo: "",
+  primerNombre: "",
+  segundoNombre: "",
+  primerApellido: "",
+  segundoApellido: "",
+  tipoIdentificacion: "",
+  numeroIdentificacion: "",
+  cardnumber: "",
+  formaPago: "Carné",
+  diaDebito: "15",
+  expiryDate: "",
+  prima: 0,
+  cuenta: "",
+  sumaAsegurada: 0,
+  banco: "",
+  cel: "",
+  monto: "",
+  monedaDebito: "",
+};
+
 
 export { FormContext, FormProvider };

@@ -34,6 +34,7 @@ const useInsertCard = () => {
 
     try {
       const response = await InfoInsert1.InsertInfo(data);
+      console.log("Este es el error",response);
       setResultado(response.data);
       setInsertado(true);
     } catch (err: any) {

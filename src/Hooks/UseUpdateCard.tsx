@@ -7,6 +7,7 @@ const UseUpdateCard = () => {
   const [error, setError] = useState<string | null>(null);
 
   const updateCard = async (cardData: ClienteDataUpdate) => {
+    console.log("Este es el cuerpo",cardData);
     setLoading(true);
     setError(null);
     try {
@@ -14,8 +15,8 @@ const UseUpdateCard = () => {
         ...cardData,
      
       };
-
-      console.log("Actualizando tarjeta:", payload);
+         
+      
       await InfoActualiza1.UpdateInfo(payload);
     } catch (err) {
       setError('Error al actualizar la tarjeta');

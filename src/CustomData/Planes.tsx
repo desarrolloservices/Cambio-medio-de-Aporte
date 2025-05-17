@@ -96,4 +96,10 @@ export const planes: Plan[] = [
     },
   ];
 
-  export const Bancos =["Banco Atlántida","Bac Honduras","Banco Ficohsa","Banco de Occidente","Banco del País"]
+  export const Bancos =["Bac Credomatic","Banco Atlántida","Banco Ficohsa","Banco del País","Banco Promerica",
+"Davivienda","Banco LAFISE","Banco de Occidente","Banrural","Banco Cuscatlán",
+"Banco FICENSA","Bank of America","Capital One","Citibank","Wells Fargo",
+"BANHCAFE","Chase Bank","Commerzbank","Banco Liverpool","Banco Santander",
+"Banco Inbursa","Banco STP","Truist Bank","BBVA","Butterfield Bank",
+"CaixaBank","Ceproban","Deutsche Kreditbank","George Bank","Goldman Sachs",
+"PC Financial","Scotiabank","TD Bank"]

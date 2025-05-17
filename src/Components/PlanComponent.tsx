@@ -3,15 +3,15 @@ import { Plan } from '../Interfaces/Tipos';
 import { Card, CardActionArea, CardContent, CardHeader, CardMedia, Typography } from '@mui/material';
 
 interface Props {
-    // Propiedades del componente
+  
     Plan:Plan;
 }
 
 const PlanComponent: FC<Props> = ({ Plan }) => {
-    // Lógica del componente
+    
 
     return (
-        // JSX del componente
+        
         <Card sx={{ maxWidth:150 }}>
         <CardActionArea>
           <CardHeader 

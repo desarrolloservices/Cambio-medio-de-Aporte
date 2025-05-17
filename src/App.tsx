@@ -56,7 +56,7 @@ function App() {
 }
 
 const AppContent: React.FC = () => {
-  const { isValid, isOVP } = useValidateToken();
+  const { isValid, isOVP,id } = useValidateToken();
   const [clienteInfo, setClienteInfo] = useState<informacionCliente>({
     Nombre: "",
     Correo: "",
@@ -128,7 +128,7 @@ const AppContent: React.FC = () => {
           style={{ width: "100px", marginBottom: "20px" }}
         />
         <Typography variant="h4" color="error" gutterBottom>
-          Su sesión ha expirado
+          El link ha expirado
         </Typography>
         <Typography variant="h6" color="textSecondary">
           Por favor, ingrese nuevamente desde el enlace proporcionado en su correo.
@@ -169,7 +169,7 @@ const AppContent: React.FC = () => {
             mb={2}
           >
             <Typography variant="h3" color={theme.palette.primary.main}>
-              Actualiza tu medio de aporte
+              modifica tu medio de aporte <br/>por Tarjeta de Crédito
             </Typography>
           </Grid>
           <Grid item xs={12} mb={3}>
@@ -181,7 +181,8 @@ const AppContent: React.FC = () => {
           </Grid>
           <Grid item xs={12} mb={3}>
             <Typography variant="h6" color={theme.palette.secondary.main}>
-              ¡Haz crecer tu patrimonio! Actualiza e incrementa tu aporte y asegura un mañana próspero para ti y tu familia. Para tu comodidad, puedes afiliar tu aporte a un medio automático con tu tarjeta de crédito o débito.
+              ¡Impulsa tu patrimonio!
+Actualiza e incrementa tu aporte. Para tu comodidad, puedes establecer débitos automáticos con tu tarjeta de crédito o débito.
             </Typography>
             <br />
             {isOVP && (
@@ -198,7 +199,7 @@ const AppContent: React.FC = () => {
         ) : (
           <ClienteProvider>
             <EditDialogProvider>
-              <Form1 listCuentas={listCuentas} />
+              <Form1 listCuentas={listCuentas} id={id} />
             </EditDialogProvider>
           </ClienteProvider>
         )}

@@ -7,9 +7,10 @@ import useCliente from '../Hooks/UseCliente';
 interface Props {
   onSessionCreated: (sessionId: string) => void;
   onVeriffStarted: () => void;
+  id: string | null;
 }
 
-const VeriffComponentNew: React.FC<Props> = ({ onSessionCreated, onVeriffStarted }) => {
+const VeriffComponentNew: React.FC<Props> = ({ onSessionCreated, onVeriffStarted, id  }) => {
   const [veriffUrl, setVeriffUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -24,7 +25,7 @@ const VeriffComponentNew: React.FC<Props> = ({ onSessionCreated, onVeriffStarted
         await loadScript('https://cdn.veriff.me/incontext/js/v1/veriff.js');
         setIsSDKLoaded(true);
       } catch (err) {
-        console.error('Error cargando el SDK de Veriff:', err);
+        
         setError("No se pudo cargar el SDK de Veriff.");
       }
     };
@@ -52,7 +53,7 @@ const VeriffComponentNew: React.FC<Props> = ({ onSessionCreated, onVeriffStarted
         const myData = {
           nombre: cliente?.Nombre || "",
           apellido: "",
-          identidad: "0601199002463",
+          identidad: id ?? "",
           idgestion: 0,
           email: cliente?.Correo || "",
           caso: 0,
@@ -79,7 +80,7 @@ const VeriffComponentNew: React.FC<Props> = ({ onSessionCreated, onVeriffStarted
           throw new Error("No se obtuvo la URL");
         }
       } catch (err) {
-        console.error("Error al obtener la URL de Veriff:", err);
+        
         setError("No se pudo obtener la URL de Veriff.");
       } finally {
         setLoading(false);

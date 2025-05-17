@@ -24,10 +24,10 @@ const VeriffComponent: React.FC = () => {
               parentId: 'veriff-root',
               onSession: (err: any, response: any) => {
                 if (err) {
-                  console.error('Error en Veriff:', err);
+              
                   return;
                 }
-                console.log('Session creada:', response);
+               
                 window.veriffSDK?.createVeriffFrame({ url: response.verification.url });
               },
             });

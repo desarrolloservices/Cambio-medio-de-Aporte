@@ -21,10 +21,9 @@ const VeriffStatusChecker = ({ sessionId, onApproved, onRejected }: Props) => {
       try {
         const response = await validateSession1.obtieneSession(sessionId);
         const estado = response.data.status;
-        console.log("📡 Estado actual Veriff:", estado);
-        console.log(response.data);
+        
         setStatus(estado);
-              
+              if(!response.data.verification.status===null){
         if (response.data.verification.status === 'approved') {
           clearInterval(intervalId);
           onApproved();
@@ -44,13 +43,14 @@ const VeriffStatusChecker = ({ sessionId, onApproved, onRejected }: Props) => {
             expires: 1,
           });
         }
+      }
       } catch (error) {
-        console.error('❌ Error al consultar estado de Veriff:', error);
+        
       }
     };
 
     fetchStatus(); // Primer chequeo inmediato
-    intervalId = setInterval(fetchStatus, 1000); // 💡 cada 1 segundo
+    intervalId = setInterval(fetchStatus, 10000); // 
 
     return () => clearInterval(intervalId); // limpieza
   }, [sessionId]);

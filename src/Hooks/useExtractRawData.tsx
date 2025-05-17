@@ -4,7 +4,7 @@ import { RawData } from "../Interfaces/Tipos";
 
 interface useExtractRawDataProps {
   cuenta: string;
-  trigger?: any; // para forzar recarga si cambia este valor
+  trigger?: any; 
 }
 
 const useExtractRawData = ({ cuenta, trigger }: useExtractRawDataProps) => {
@@ -17,12 +17,16 @@ const useExtractRawData = ({ cuenta, trigger }: useExtractRawDataProps) => {
       setLoadingData(true);
       setErrorData(null);
       try {
-        const response = await InfoConsulta1.InfoConsulta(cuenta);
+        const response = await InfoConsulta1.InfoConsulta(cuenta,"OVP");
 
         if (Array.isArray(response.data)) {
           const extractedData: RawData[] = response.data.reduce(
+            
             (acc: RawData[], item: any) => {
+          
+                
               if (item.Estatus.Value !== 'I') {
+             console.log(item);
                 acc.push({
                   Tarjeta: item.Tarjeta,
                   Aporte: item.Aporte,
@@ -33,8 +37,9 @@ const useExtractRawData = ({ cuenta, trigger }: useExtractRawDataProps) => {
                   ID: item.ID,
                   Contrato: item.Contrato,
                   Banco:item.Emisor,
-                  Monto:item.Aporte
-
+                  Monto:item.Aporte,
+                  //MonedaDebito: item.MonedaDebito?.Value ?? ''
+                  MonedaDebito: item.MonedaDebito?.Value ?? 'LEMPIRAS'
                 });
               }
               return acc;
@@ -43,6 +48,7 @@ const useExtractRawData = ({ cuenta, trigger }: useExtractRawDataProps) => {
           );
 
           setRawData(extractedData);
+          
         } else {
           setRawData([]);
         }
@@ -57,7 +63,7 @@ const useExtractRawData = ({ cuenta, trigger }: useExtractRawDataProps) => {
     if (cuenta) {
       fetchData();
     }
-  }, [cuenta, trigger]); // se ejecuta también cuando trigger cambie
+  }, [cuenta, trigger]); 
 
   return { rawData, loadingData, errorData };
 };

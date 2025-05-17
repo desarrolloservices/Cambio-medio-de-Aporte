@@ -305,6 +305,7 @@ export const InfoProductos1 = {
 
 export const InfoActualiza1 = {
   UpdateInfo: function (data: ClienteDataUpdate) {
+    console.log("Hola aca",data);
     return instanceUpdate1.post('', data, {
       headers: {
         "Content-Type": "application/json",
@@ -316,6 +317,7 @@ export const InfoActualiza1 = {
 
 export const InfoInsert1 = {
   InsertInfo: function (data: ClienteData) {
+
     return instanceInsert1.post('', data, {
       headers: {
         "Content-Type": "application/json",
@@ -337,8 +339,8 @@ export const InfoInsertaVeriff1 = {
 };
 
 export const InfoConsulta1 = {
-  InfoConsulta: function (cuenta: string) {
-    const cta = { cuenta: cuenta };
+  InfoConsulta: function (cuenta: string, canal:string) {
+    const cta = { cuenta: cuenta,canal: canal };
 
     return instanceConsulta1.post('', cta, {
       headers: {
