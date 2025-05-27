@@ -24,9 +24,19 @@ export interface FormData {
   monedaDebito:string;
 }
 
+type FlexibleInputEvent =
+  | React.ChangeEvent<HTMLInputElement>
+  | {
+      target: {
+        name: string;
+        value: string;
+      };
+    };
+
+
 export interface FormContextProps {
   formData: FormData;
-  handleInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  handleInputChange: (e: FlexibleInputEvent) => void;
   activeStep: number;
   setActiveStep?: React.Dispatch<React.SetStateAction<number>>;
   setFormData?: React.Dispatch<React.SetStateAction<FormData>> | undefined;

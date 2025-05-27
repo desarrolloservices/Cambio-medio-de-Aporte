@@ -28,7 +28,7 @@ import useValidateToken from "../Hooks/UseValidateTk";
 import VeriffComponentNew from "./VeriffDialogoNew";
 import VeriffStatusChecker from "./ValidateSession";
 import { useClienteContext } from "../Context/ClienteContext";
-import { IMaskInput } from "react-imask";
+import { IMask, IMaskInput } from "react-imask";
 import { InfoInsert1 } from "../Data/GetDatosClientes";
 import UseDeleteCard from "../Hooks/UseDeleteCard";
 import { useEditDialog } from "../Context/EditDialogContext";
@@ -38,6 +38,11 @@ import { useConfirmDialog } from '../Hooks/UseConfirmDialog';
 import { useCardValidator } from "../Hooks/useCardValidator";
 import { initialFormData } from "../Context/FormContext";
 import FullscreenLoader from '../Components/FullscreenLoader';
+import ExpiryDateMaskedField from '../Components/ExpiryDateMaskedField';
+import { useExpiryDateValidator } from '../Hooks/useExpiryDateValidator';
+import CardTypeDisplay from "../Components/CardTypeDisplay";
+import CardNumberMaskedField from "../Components/CardNumberMaskedField";
+
 
 interface Props {
   listCuentas: cuenta[];
@@ -52,22 +57,34 @@ interface CustomProps {
 const TextMaskCustom = React.forwardRef<HTMLInputElement, CustomProps>(
   function TextMaskCustom(props, ref) {
     const { onChange, ...other } = props;
+
     return (
       <IMaskInput
         {...other}
-        mask="00/0000"
-        definitions={{
-          "#": /[1-9]/,
+        mask="MM/YY"
+        blocks={{
+          MM: {
+            mask: IMask.MaskedRange,
+            from: 1,
+            to: 12,
+            maxLength: 2, // fuerza 01, 02... 12
+          },
+          YY: {
+            mask: IMask.MaskedRange,
+            from: 0,
+            to: 99,
+          },
         }}
         inputRef={ref}
+        overwrite
         onAccept={(value: any) =>
           onChange({ target: { name: props.name, value } })
         }
-        overwrite
       />
     );
   }
 );
+
 
 const Form1: React.FC<Props> = ({ listCuentas, id } ) => {
   const { isValid, isOVP } = useValidateToken();
@@ -75,12 +92,11 @@ const Form1: React.FC<Props> = ({ listCuentas, id } ) => {
   const [reloadTrigger, setReloadTrigger] = useState(false);
   const { deleteCard, loading, error } = UseDeleteCard();
   const [showLoader, setShowLoader] = useState(false);
-
-  const { formData, handleInputChange, handleSelectChange, setFormData } =
+const { formData, handleInputChange, handleSelectChange, setFormData } =
     useContext(FormContext);
 const [montoError, setMontoError] = useState<string | null>(null);
 const [cardErrors, setCardErrors] = useState<{ cardNumber?: string; expiryDate?: string }>({});
-const { validateCard } = useCardValidator();
+const { validateCard, getCardType } = useCardValidator();
   const [veriffSessionId, setVeriffSessionId] = useState<string | null>(null);
   const [veriffStarted, setVeriffStarted] = useState(false);
   const [veriffApproved, setVeriffApproved] = useState(false);
@@ -94,7 +110,7 @@ const { validateCard } = useCardValidator();
   const [cuentaSeleccionada, setCuentaSeleccionada] = useState<cuenta>(
     listCuentas.length > 0 ? listCuentas[0] : ({} as cuenta)
   );
-  
+  const { isExpiryDateValid } = useExpiryDateValidator();
 const { loading: formLoading, setLoading } = useContext(FormContext);
   const { rawData, loadingData } = useExtractRawData({
     cuenta: cuentaSeleccionada.cuenta,
@@ -105,8 +121,12 @@ const { loading: formLoading, setLoading } = useContext(FormContext);
   const confirmAddCard = async () => {
 
     const monto = parseFloat(formData.monto);
+    if (monto < 0) {
+  setMontoError("No se permiten montos negativos");
+  return;
+}
   const moneda = formData.monedaDebito;
-
+console.log("Moneda seleccionada:", moneda);
   
   if (
     (moneda === 'LEMPIRAS' && monto < 250) ||
@@ -121,6 +141,7 @@ const { loading: formLoading, setLoading } = useContext(FormContext);
   }
 
   setMontoError(null); 
+  const [mes, anio] = formData.expiryDate.split("/");
     const cardData: ClienteData = {
       Tarjeta: formData.cardnumber,
       Aporte: formData.aporte,
@@ -133,27 +154,40 @@ const { loading: formLoading, setLoading } = useContext(FormContext);
       Email: cliente?.Correo ?? "",
       NombreCliente: cliente?.Nombre ?? "",
       Banco: formData.banco,
-      Vencimiento: formData.expiryDate.replace("/", ""),
+      Vencimiento: `${mes}20${anio}`,
       TipoDebito: "TC",
       Modalidad: cuentaSeleccionada.modalidad,
-      MonedaDebito:formData.monedaDebito
+      MonedaDebito:cuentaSeleccionada.moneda
     };
+    if (!isExpiryDateValid(formData.expiryDate)) {
+  setCardErrors(prev => ({
+    ...prev,
+    expiryDate: 'Fecha inválida o vencida',
+  }));
+  return;
+}
   const errors = validateCard(formData.cardnumber);
  
 if (Object.keys(errors).length > 0) {
   setCardErrors(errors);
   return;
 }
+
  setShowLoader(true);
 setCardErrors({});
     await InfoInsert1.InsertInfo(cardData);
     setShowCardForm(false);
-    await delay(3000);
+    
     setReloadTrigger((prev) => !prev);
     
     setSnackbarMessage("¡Tarjeta registrada con éxito!");
   setSnackbarOpen(true);
-  setFormData?.(initialFormData);
+ const cuentaActual = formData.cuenta;
+
+setFormData?.({
+  ...initialFormData,
+  cuenta: cuentaActual, 
+});
 setCardErrors({});
 setMontoError(null);
  setShowLoader(false);
@@ -224,10 +258,11 @@ useEffect(() => {
 
   //const handleEdit = (row: any) => alert(`Editando: ${JSON.stringify(row, null, 2)}`);
   const handleDelete = (row: any) => {
+  
     const cardData: ClienteDataUpdate = {
       ID: String(row.ID ?? ""),
       Tarjeta: row.Tarjeta,
-      Aporte: "MENSUAL",
+      Aporte: formData.aporte || row.TipoDebito,
       Monto: String(row.Monto),
       Contrato: cuentaSeleccionada.contrato,
       MonedaCCI: cuentaSeleccionada.moneda,
@@ -237,13 +272,14 @@ useEffect(() => {
       Email: cliente?.Correo ?? "",
       NombreCliente: cliente?.Nombre ?? "",
       Banco: row.Banco || formData.banco,
-      Vencimiento: row.FechaVencimiento?.replace("/", "") ?? "",
+      Vencimiento: row.FechaVencimiento,
       TipoDebito: "TC",
       Modalidad: cuentaSeleccionada.modalidad || "",
       MonedaDebito:row.MonedaDebito || formData.monedaDebito,
       Estado: "I",
 
     };
+    console.log("Datos de la tarjeta a eliminar:", cardData);
   
     showConfirm({
       title: "Confirmar eliminación",
@@ -465,42 +501,25 @@ useEffect(() => {
           {showCardForm && (
             <>
               <Grid item xs={12} sm={4}>
-                <TextField
-                  id="cardnumber"
-                  name="cardnumber"
-                  label="Número de la Tarjeta"
-                  variant="outlined"
-                  type="number"
-                  value={formData?.cardnumber || ""}
-                  onChange={handleInputChange}
-                  fullWidth
-                  error={!!cardErrors.cardNumber}
-                 helperText={cardErrors.cardNumber}
-                  InputProps={{
-                    
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <CreditCardIcon />
-                      </InputAdornment>
-                    ),
-                  }}
-                  required
-                />
+               <CardNumberMaskedField
+  name="cardnumber"
+  value={formData.cardnumber}
+  onChange={handleInputChange}
+  error={!!cardErrors.cardNumber}
+  helperText={cardErrors.cardNumber}
+/>
+<CardTypeDisplay cardNumber={formData.cardnumber} />
               </Grid>
               <Grid item xs={12} sm={4}>
-                 <FormControl fullWidth variant="outlined">
-    <InputLabel shrink htmlFor="expiryDate">Fecha de Expiración</InputLabel>
-    <OutlinedInput
-      id="expiryDate"
-      name="expiryDate"
-      label="Fecha de Expiración"
-      placeholder="MM/YYYY"
-      value={formData.expiryDate}
-      onChange={handleInputChange}
-      notched 
-      inputComponent={TextMaskCustom as any}
-    />
-  </FormControl>
+                
+  <ExpiryDateMaskedField
+  name="expiryDate"
+  value={formData.expiryDate}
+  onChange={handleInputChange}
+  error={!!cardErrors.expiryDate}
+  helperText={cardErrors.expiryDate}
+/>
+
               </Grid>
               <Grid item xs={12} sm={4}>
                 <FormControl fullWidth>
@@ -538,7 +557,7 @@ useEffect(() => {
       required
       error={!!montoError}
       helperText={montoError}
-      InputLabelProps={{ shrink: true }}  // 👈 esto resuelve el problema
+      InputLabelProps={{ shrink: true }}  
     />
   </FormControl>
 </Grid>
@@ -566,8 +585,8 @@ useEffect(() => {
                     value={formData.diaDebito}
                     onChange={handleSelectChange}
                   >
-                    {[...Array(27)].map((_, i) => {
-                      const val = (i + 2).toString();
+                    {[...Array(30)].map((_, i) => {
+                      const val = (i + 1).toString();
                       return (
                         <MenuItem value={val} key={val}>
                           {val}

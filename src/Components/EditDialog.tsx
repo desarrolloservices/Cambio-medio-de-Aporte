@@ -18,7 +18,10 @@ import { useEditDialog } from "../Context/EditDialogContext";
 import UseUpdateCard from "../Hooks/UseUpdateCard";
 import ConfirmDialog from './ConfirmDialog';
 import { useConfirmDialog } from '../Hooks/UseConfirmDialog';
-
+import CardNumberMaskedField from "../Components/CardNumberMaskedField";
+import ExpiryDateMaskedField from "../Components/ExpiryDateMaskedField";
+import { useCardValidator } from "../Hooks/useCardValidator";
+import { useExpiryDateValidator } from "../Hooks/useExpiryDateValidator";
 interface EditDialogProps {
   onUpdateSuccess: () => void;
 }
@@ -50,13 +53,17 @@ const EditDialog: React.FC<EditDialogProps> = ({ onUpdateSuccess }) => {
   const [monto, setMonto] = useState("");
   const [Aporte, setAporte] = useState("");
  
-  //const [monedaDebito, setMonedaDebito] = useState("");
+  const [monedaDebito, setMonedaDebito] = useState("");
   const [diaDebito, setDiaDebito] = useState("");
   const [fechaVencimiento, setFechaVencimiento] = useState("");
   const [idTC, setidTC] = useState("");
 
   const [snackbarOpen, setSnackbarOpen] = useState(false);
-
+const [cardError, setCardError] = useState("");
+const [expiryError, setExpiryError] = useState("");
+const { validateCard } = useCardValidator();
+const { getExpiryError } = useExpiryDateValidator();
+const [montoError, setMontoError] = useState("");
   const {
     open: confirmOpen,
     loading: confirmLoading,
@@ -72,9 +79,13 @@ const EditDialog: React.FC<EditDialogProps> = ({ onUpdateSuccess }) => {
     if (rowData) {
       setTarjeta(rowData.Tarjeta || "");
       setMonto(rowData.Monto || "");
-      //setMonedaDebito(rowData.MonedaDebito || "");
+      setMonedaDebito(rowData.MonedaDebito || "");
       setDiaDebito(rowData.DiaDebito || "");
-      setFechaVencimiento(rowData.FechaVencimiento || "");
+      setFechaVencimiento(
+  rowData.FechaVencimiento
+    ? `${rowData.FechaVencimiento.slice(0, 2)}/${rowData.FechaVencimiento.slice(-2)}`
+    : ""
+);
       setidTC(rowData.ID || "");
       setAporte(rowData.Aporte||"");
       
@@ -83,18 +94,46 @@ const EditDialog: React.FC<EditDialogProps> = ({ onUpdateSuccess }) => {
   }, [rowData]);
 
   const handleSave = () => {
+    const [mes, anio] = fechaVencimiento.split("/");
+    const montoNumerico = parseFloat(monto);
+
+if (isNaN(montoNumerico) || montoNumerico < 0) {
+  setMontoError("El monto no puede ser negativo o vacío");
+  return;
+}
+
+if (
+  (monedaDebito === "LEMPIRAS" && montoNumerico < 250) ||
+  (monedaDebito === "DÓLARES" && montoNumerico < 20)
+) {
+  setMontoError(
+    monedaDebito === "LEMPIRAS"
+      ? "El monto mínimo  es L 250"
+      : "El monto mínimo  es $ 20"
+  );
+  return;
+}
     const datosActualizados = {
       ...rowData,
       Tarjeta: tarjeta,
       Monto: String(monto),
-      //MonedaDebito: monedaDebito,
+      MonedaDebito: monedaDebito,
       DiaDebito: diaDebito,
       Aporte:"MENSUAL",
-      Vencimiento: fechaVencimiento.replace("/", ""),
+      Vencimiento: `${mes}20${anio}`,
       ID: String(idTC),
       Estado: "A",
     };
 
+
+const cardValidationError = validateCard(tarjeta).cardNumber;
+const expiryValidationError = getExpiryError(fechaVencimiento);
+
+if (cardValidationError || expiryValidationError) {
+  setCardError(cardValidationError ?? "");
+  setExpiryError(expiryValidationError ?? "");
+  return; 
+}
     showConfirm({
       title: "Confirmar Actualización",
       message: "¿Deseas Guardar los Cambios?",
@@ -104,7 +143,7 @@ const EditDialog: React.FC<EditDialogProps> = ({ onUpdateSuccess }) => {
         await updateCard(datosActualizados);
       
         onUpdateSuccess();
-        await delay(4000); // esperar antes del cierre visual
+       
         setSnackbarOpen(true); // mostrar mensaje de éxito
         closeDialog(); // cerrar el diálogo
       },
@@ -123,22 +162,32 @@ const EditDialog: React.FC<EditDialogProps> = ({ onUpdateSuccess }) => {
   Modificar Aporte
 </DialogTitle>
         <DialogContent>
-          <TextField
-            fullWidth
-            margin="normal"
-            label="Número de Tarjeta"
-            value={tarjeta}
-            onChange={(e) => setTarjeta(e.target.value)}
-          />
+         <FormControl fullWidth margin="normal">
+  <CardNumberMaskedField
+    name="cardnumber"
+    value={tarjeta}
+    onChange={(e) => {
+      setTarjeta(e.target.value);
+      setCardError("");
+    }}
+    error={!!cardError}
+    helperText={cardError}
+  />
+</FormControl>
 
           <TextField
-            fullWidth
-            margin="normal"
-            label="Monto"
-            type="number"
-            value={monto}
-            onChange={(e) => setMonto(e.target.value)}
-          />
+  fullWidth
+  margin="normal"
+  label="Monto"
+  type="number"
+  value={monto}
+  onChange={(e) => {
+    setMonto(e.target.value);
+    setMontoError(""); // limpiar error al escribir
+  }}
+  error={!!montoError}
+  helperText={montoError}
+/>
 
          
 
@@ -149,8 +198,8 @@ const EditDialog: React.FC<EditDialogProps> = ({ onUpdateSuccess }) => {
               onChange={(e) => setDiaDebito(e.target.value)}
               label="Día de Débito"
             >
-              {[...Array(27)].map((_, i) => {
-                const val = (i + 2).toString();
+              {[...Array(30)].map((_, i) => {
+                const val = (i + 1).toString();
                 return (
                   <MenuItem value={val} key={val}>
                     {val}
@@ -161,16 +210,17 @@ const EditDialog: React.FC<EditDialogProps> = ({ onUpdateSuccess }) => {
           </FormControl>
 
           <FormControl fullWidth margin="normal">
-            <InputLabel>Fecha de Vencimiento</InputLabel>
-            <OutlinedInput
-              value={fechaVencimiento}
-              onChange={(e) => setFechaVencimiento(e.target.value)}
-              placeholder="MM/YYYY"
-              name="fechaVencimiento"
-              id="fechaVencimiento"
-              inputComponent={TextMaskCustom as any}
-              label="Fecha de Vencimiento"
-            />
+            
+            <ExpiryDateMaskedField
+  name="expiryDate"
+  value={fechaVencimiento}
+  onChange={(e) => {
+    setFechaVencimiento(e.target.value);
+    setExpiryError("");
+  }}
+  error={!!expiryError}
+  helperText={expiryError}
+/>
           </FormControl>
 
           <Button onClick={handleSave} variant="contained" color="primary"  fullWidth

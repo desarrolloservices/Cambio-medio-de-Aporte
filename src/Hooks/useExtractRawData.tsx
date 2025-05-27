@@ -26,7 +26,7 @@ const useExtractRawData = ({ cuenta, trigger }: useExtractRawDataProps) => {
           
                 
               if (item.Estatus.Value !== 'I') {
-             console.log(item);
+             console.log(item.FechaVencimiento);
                 acc.push({
                   Tarjeta: item.Tarjeta,
                   Aporte: item.Aporte,
@@ -39,8 +39,10 @@ const useExtractRawData = ({ cuenta, trigger }: useExtractRawDataProps) => {
                   Banco:item.Emisor,
                   Monto:item.Aporte,
                   //MonedaDebito: item.MonedaDebito?.Value ?? ''
-                  MonedaDebito: item.MonedaDebito?.Value ?? 'LEMPIRAS'
+                  MonedaDebito: item.MonedaCCI?.Value ?? 'LEMPIRAS'
                 });
+
+
               }
               return acc;
             },

@@ -317,7 +317,7 @@ export const InfoActualiza1 = {
 
 export const InfoInsert1 = {
   InsertInfo: function (data: ClienteData) {
-
+console.log("Este es el cuerpo",data);
     return instanceInsert1.post('', data, {
       headers: {
         "Content-Type": "application/json",
