@@ -9,6 +9,7 @@ interface CustomProps {
   onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
   error?: boolean;
   helperText?: string;
+    onFocus?: () => void;
 }
 
 const CardMaskCustom = React.forwardRef<HTMLInputElement, any>(

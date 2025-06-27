@@ -111,7 +111,13 @@ const { validateCard, getCardType } = useCardValidator();
     listCuentas.length > 0 ? listCuentas[0] : ({} as cuenta)
   );
   const { isExpiryDateValid } = useExpiryDateValidator();
+  const [errorSnackbarOpen, setErrorSnackbarOpen] = useState(false);
+const [errorSnackbarMessage, setErrorSnackbarMessage] = useState("");
 const { loading: formLoading, setLoading } = useContext(FormContext);
+const showError = (message: string) => {
+  setErrorSnackbarMessage(message);
+  setErrorSnackbarOpen(true);
+};
   const { rawData, loadingData } = useExtractRawData({
     cuenta: cuentaSeleccionada.cuenta,
     trigger: reloadTrigger,
@@ -123,22 +129,24 @@ const { loading: formLoading, setLoading } = useContext(FormContext);
     const monto = parseFloat(formData.monto);
     if (monto < 0) {
   setMontoError("No se permiten montos negativos");
+  showError("No se permiten montos negativos");
   return;
 }
+
   const moneda = formData.monedaDebito;
-console.log("Moneda seleccionada:", moneda);
+
   
-  if (
-    (moneda === 'LEMPIRAS' && monto < 250) ||
-    (moneda === 'DÓLARES' && monto < 20)
-  ) {
-    setMontoError(
-      moneda === 'LEMPIRAS'
-        ? 'El monto mínimo para Lempiras es L 250'
-        : 'El monto mínimo para Dólares es $ 20'
-    );
-    return; 
-  }
+if (
+  (moneda === 'LEMPIRAS' && monto < 250) ||
+  (moneda === 'DÓLARES' && monto < 20)
+) {
+  const msg = moneda === 'LEMPIRAS'
+    ? 'El monto mínimo para Lempiras es L 250'
+    : 'El monto mínimo para Dólares es $ 20';
+  setMontoError(msg);
+  showError(msg);
+  return;
+}
 
   setMontoError(null); 
   const [mes, anio] = formData.expiryDate.split("/");
@@ -159,17 +167,18 @@ console.log("Moneda seleccionada:", moneda);
       Modalidad: cuentaSeleccionada.modalidad,
       MonedaDebito:cuentaSeleccionada.moneda
     };
-    if (!isExpiryDateValid(formData.expiryDate)) {
-  setCardErrors(prev => ({
-    ...prev,
-    expiryDate: 'Fecha inválida o vencida',
-  }));
+   if (!isExpiryDateValid(formData.expiryDate)) {
+  const msg = 'Fecha inválida o vencida';
+  setCardErrors(prev => ({ ...prev, expiryDate: msg }));
+  showError(msg);
   return;
 }
   const errors = validateCard(formData.cardnumber);
  
 if (Object.keys(errors).length > 0) {
   setCardErrors(errors);
+  const combinedErrorMsg = Object.values(errors).join(" | ");
+  showError(combinedErrorMsg);
   return;
 }
 
@@ -195,7 +204,11 @@ setMontoError(null);
 
 
   };
-
+const handleVeriffStarted = () => {
+  setVeriffStarted(true);
+  setVeriffError(false);
+  
+};
   const handleEdit = (row: any) => {
     
     openDialog({
@@ -237,10 +250,9 @@ setMontoError(null);
   }, [cliente]);
 
   useEffect(() => {
-    if (veriffStarted && veriffSessionId && !veriffApproved && !veriffShouldCheck) {
-   
-      setVeriffShouldCheck(true);
-    }
+    if (veriffStarted && veriffSessionId) {
+    setVeriffShouldCheck(true);
+  }
   }, [veriffStarted, veriffSessionId]);
   useEffect(() => {
   if (rawData.length === 0) {
@@ -409,13 +421,13 @@ useEffect(() => {
           <Grid item xs={12}>
             {(!veriffApproved || veriffError) && (
               <VeriffComponentNew
-                onSessionCreated={setVeriffSessionId}
-                onVeriffStarted={() => {
-                  setVeriffStarted(true);
-                  setVeriffError(false);
-                }}
-                id={id}
-              />
+  onSessionCreated={(sessionId) => {
+    setVeriffSessionId(sessionId);
+    setVeriffStarted(true); // ← activa cuando ya hay sesión lista
+  }}
+  onVeriffStarted={() => {}} // ya no necesitas nada aquí
+  id={id}
+/>
             )}
           </Grid>
 
@@ -479,7 +491,7 @@ useEffect(() => {
         startIcon={<CreditCardIcon />}
         onClick={handleAddCard}
       >
-        Agregar método de pago
+        Agregar otra tarjeta
       </Button>
     )}
   </Box>
@@ -647,6 +659,20 @@ useEffect(() => {
     sx={{ width: '100%' }}
   >
     {snackbarMessage}
+  </Alert>
+</Snackbar>
+<Snackbar
+  open={errorSnackbarOpen}
+  autoHideDuration={4000}
+  onClose={() => setErrorSnackbarOpen(false)}
+  anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+>
+  <Alert
+    onClose={() => setErrorSnackbarOpen(false)}
+    severity="error"
+    sx={{ width: '100%' }}
+  >
+    {errorSnackbarMessage}
   </Alert>
 </Snackbar>
     </>

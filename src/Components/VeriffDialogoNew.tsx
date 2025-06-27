@@ -110,7 +110,7 @@ const VeriffComponentNew: React.FC<Props> = ({ onSessionCreated, onVeriffStarted
       if (root) root.innerHTML = "";
       window.veriffSDK.createVeriffFrame({ url: veriffUrl });
       setIsMounted(true);
-      onVeriffStarted(); // 🚀 solo aquí se marca como iniciado
+    
     } else {
       setError("El SDK de Veriff no se cargó correctamente.");
     }

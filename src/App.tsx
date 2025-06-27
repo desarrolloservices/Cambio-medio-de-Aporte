@@ -169,7 +169,7 @@ const AppContent: React.FC = () => {
             mb={2}
           >
             <Typography variant="h3" color={theme.palette.primary.main}>
-              Modifica tu Medio de Aporte <br/>por Tarjeta de Crédito
+              Modifica tu medio de aporte <br/>de Tarjeta de Crédito
             </Typography>
           </Grid>
           <Grid item xs={12} mb={3}>
