@@ -42,8 +42,10 @@ export function saveVeriffFromUrl() {
 
 import Cookies from 'js-cookie';
 
-function generateFakeId() {
-  return Math.floor(Math.random() * 100000);
+function generateFakeId(): number {
+  const values = new Uint32Array(1);
+  crypto.getRandomValues(values);
+  return values[0] % 100000;
 }
 
 export function saveTokenFromUrl() {
