@@ -7,7 +7,7 @@ const UseUpdateCard = () => {
   const [error, setError] = useState<string | null>(null);
 
   const updateCard = async (cardData: ClienteDataUpdate) => {
-    console.log("Este es el cuerpo",cardData);
+    
     setLoading(true);
     setError(null);
     try {

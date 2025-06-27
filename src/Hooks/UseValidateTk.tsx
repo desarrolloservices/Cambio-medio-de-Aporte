@@ -28,7 +28,7 @@ const useValidateToken = (): TokenValidationResult => {
       if (!token) {
      
         setIsValid(false);
-        setIsOVP(false);
+        setIsOVP(true);
         return;
       }
 
@@ -42,7 +42,7 @@ const useValidateToken = (): TokenValidationResult => {
         if (!validoParam) {
         
         }
-
+           
         setIsValid(validoParam);
         setIsOVP(ovpParam);
         setId(idParam);

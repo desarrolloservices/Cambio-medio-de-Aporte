@@ -22,6 +22,7 @@ import CardNumberMaskedField from "../Components/CardNumberMaskedField";
 import ExpiryDateMaskedField from "../Components/ExpiryDateMaskedField";
 import { useCardValidator } from "../Hooks/useCardValidator";
 import { useExpiryDateValidator } from "../Hooks/useExpiryDateValidator";
+import { encryptWithPublicKey } from "../Utils/encryptWithPublicKey";
 interface EditDialogProps {
   onUpdateSuccess: () => void;
 }
@@ -123,6 +124,7 @@ if (
       Vencimiento: `${mes}20${anio}`,
       ID: String(idTC),
       Estado: "A",
+      Canal: "OVP",
     };
 
 
@@ -140,7 +142,20 @@ if (cardValidationError || expiryValidationError) {
       confirmButtonText: "Actualizar",
       confirmColor: "primary",
       onConfirm: async () => {
-        await updateCard(datosActualizados);
+        const encrypted = await encryptWithPublicKey({
+                      Tarjeta: datosActualizados.Tarjeta,
+                      Vencimiento: datosActualizados.Vencimiento
+                    });
+         
+                    const cardToSend = {
+                      ...datosActualizados,
+                        Tarjeta: '',
+                Vencimiento: '',
+                      EncryptedPayload: encrypted, 
+                    }; 
+                    
+                    
+        await updateCard(cardToSend);
       
         onUpdateSuccess();
        

@@ -1,4 +1,4 @@
-import Cookies from 'js-cookie';
+/*import Cookies from 'js-cookie';
 
 export function saveTokenFromUrl() {
   const params = new URLSearchParams(window.location.search);
@@ -38,7 +38,40 @@ export function saveVeriffFromUrl() {
   }
 
   
+}*/
+
+import Cookies from 'js-cookie';
+
+function generateFakeId() {
+  return Math.floor(Math.random() * 100000);
 }
+
+export function saveTokenFromUrl() {
+  const params = new URLSearchParams(window.location.search);
+  const token = params.get('tokenid');
+
+  if (token) {
+    
+    Cookies.set('tokenid', token, {
+      path: '/',
+      expires: 1, 
+      sameSite: 'Strict',
+      secure: false, 
+    });
+
+    
+    const fakeId = generateFakeId();
+    params.delete('tokenid');
+    params.set('id', fakeId.toString());
+
+    const newUrl =
+      window.location.origin + window.location.pathname + '?' + params.toString();
+
+    
+    window.history.replaceState({}, document.title, newUrl);
+  }
+}
+
 
 
 

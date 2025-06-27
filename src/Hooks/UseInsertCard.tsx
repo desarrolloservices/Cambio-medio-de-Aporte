@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import Cookies from 'js-cookie';
 import { InfoInsert1 } from '../Data/GetDatosClientes';
 import type { ClienteData } from '../Interfaces/Tipos';
+import { encryptWithPublicKey } from '../Utils/encryptWithPublicKey';
 
 const useInsertCard = () => {
   const [resultado, setResultado] = useState<any | null>(null);
@@ -33,12 +34,27 @@ const useInsertCard = () => {
     setInsertado(false);
 
     try {
-      const response = await InfoInsert1.InsertInfo(data);
-      console.log("Este es el error",response);
+      
+            const encrypted = await encryptWithPublicKey({
+              Tarjeta: data.Tarjeta,
+              Vencimiento: data.Vencimiento
+            });
+      
+          
+      
+            
+            const cardToSend = {
+              ...data,
+              EncryptedPayload: encrypted, 
+            }; 
+            
+
+      const response = await InfoInsert1.InsertInfo(cardToSend);
+    
       setResultado(response.data);
       setInsertado(true);
     } catch (err: any) {
-      console.error('❌ Error al insertar tarjeta:', err);
+ 
       setError(err.message || 'Error desconocido');
     } finally {
       setLoading(false);

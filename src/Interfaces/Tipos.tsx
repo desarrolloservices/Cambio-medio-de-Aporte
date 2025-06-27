@@ -34,7 +34,8 @@ export interface cuenta {
     Vencimiento: string;
     TipoDebito: "TC" | string; // Consider more specific types if possible
     Modalidad: "AFSL1" | string; // Consider more specific types if possible
-    MonedaDebito: "LEMPIRAS"| string
+    MonedaDebito: "LEMPIRAS"| string;
+    Canal: "OVP" | string; 
   }
 
   export interface ClienteDataUpdate {
@@ -55,6 +56,7 @@ export interface cuenta {
     Modalidad: "" | string; // Consider more specific types if possible
     Estado:"I";
     MonedaDebito: "LEMPIRAS"| string
+      Canal: "OVP" | string; 
 
   }
 

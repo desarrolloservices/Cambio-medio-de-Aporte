@@ -17,7 +17,8 @@ const useExtractRawData = ({ cuenta, trigger }: useExtractRawDataProps) => {
       setLoadingData(true);
       setErrorData(null);
       try {
-        const response = await InfoConsulta1.InfoConsulta(cuenta,"OVP");
+        const response = await InfoConsulta1.InfoConsulta(cuenta);
+
 
         if (Array.isArray(response.data)) {
           const extractedData: RawData[] = response.data.reduce(
@@ -26,7 +27,7 @@ const useExtractRawData = ({ cuenta, trigger }: useExtractRawDataProps) => {
           
                 
               if (item.Estatus.Value !== 'I') {
-             console.log(item.FechaVencimiento);
+             
                 acc.push({
                   Tarjeta: item.Tarjeta,
                   Aporte: item.Aporte,
@@ -38,7 +39,7 @@ const useExtractRawData = ({ cuenta, trigger }: useExtractRawDataProps) => {
                   Contrato: item.Contrato,
                   Banco:item.Emisor,
                   Monto:item.Aporte,
-                  //MonedaDebito: item.MonedaDebito?.Value ?? ''
+                  
                   MonedaDebito: item.MonedaCCI?.Value ?? 'LEMPIRAS'
                 });
 

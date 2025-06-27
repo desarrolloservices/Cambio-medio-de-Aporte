@@ -1,6 +1,6 @@
 // VeriffComponentClick.tsx
 import React, { useContext, useEffect, useRef, useState } from 'react';
-import { InfoInsertaVeriff } from '../Data/GetDatosClientes';
+import { InfoInsertaVeriff1 } from '../Data/GetDatosClientes';
 import { Button, Dialog, DialogContent, DialogTitle } from '@mui/material';
 import { FormContext } from '../Context/FormContext';
 
@@ -12,20 +12,20 @@ const VeriffComponentClick: React.FC = () => {
   const [isLoaded, setIsLoaded] = useState(false);
   const [shouldMountVeriff, setShouldMountVeriff] = useState(false);
 
-  const handleVeriffButtonClick = async () => {
+  const handleVeriffButtonClick1 = async () => {
     const myData = {
-      nombre: "Jose Eduardo",
-      apellido: "Villalobos",
-      identidad: "0601199002463",
+      nombre: "",
+      apellido: "",
+      identidad: "",
       idgestion: 0,
-      email: "jvillalobos@afpatlantida.com",
+      email: "",
       caso: 0,
     };
 
    
 
     try {
-      const sendResponse = await InfoInsertaVeriff.InfoConsulta(myData); // use myDataForm when the data is ok
+      const sendResponse = await InfoInsertaVeriff1.InfoConsulta(myData); // use myDataForm when the data is ok
       console.log("Response insert veriff: ", sendResponse);
 
       if (sendResponse.data.Url) {
@@ -97,7 +97,7 @@ const VeriffComponentClick: React.FC = () => {
 
   return (
     <>
-      <Button variant="contained" onClick={handleVeriffButtonClick}>
+      <Button variant="contained" onClick={handleVeriffButtonClick1}>
         Veriff
       </Button>
 

@@ -49,7 +49,7 @@ const VeriffComponent: React.FC = () => {
           }
         }, 100);
       } catch (error) {
-        console.error('Error cargando el SDK de Veriff:', error);
+     
       }
     };
 

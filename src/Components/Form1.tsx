@@ -42,6 +42,7 @@ import ExpiryDateMaskedField from '../Components/ExpiryDateMaskedField';
 import { useExpiryDateValidator } from '../Hooks/useExpiryDateValidator';
 import CardTypeDisplay from "../Components/CardTypeDisplay";
 import CardNumberMaskedField from "../Components/CardNumberMaskedField";
+import { encryptWithPublicKey } from "../Utils/encryptWithPublicKey";
 
 
 interface Props {
@@ -113,7 +114,8 @@ const { validateCard, getCardType } = useCardValidator();
   const { isExpiryDateValid } = useExpiryDateValidator();
   const [errorSnackbarOpen, setErrorSnackbarOpen] = useState(false);
 const [errorSnackbarMessage, setErrorSnackbarMessage] = useState("");
-const { loading: formLoading, setLoading } = useContext(FormContext);
+const [infoDebitoMesSiguiente, setInfoDebitoMesSiguiente] = useState(false);
+
 const showError = (message: string) => {
   setErrorSnackbarMessage(message);
   setErrorSnackbarOpen(true);
@@ -165,7 +167,8 @@ if (
       Vencimiento: `${mes}20${anio}`,
       TipoDebito: "TC",
       Modalidad: cuentaSeleccionada.modalidad,
-      MonedaDebito:cuentaSeleccionada.moneda
+      MonedaDebito:cuentaSeleccionada.moneda,
+      Canal: isOVP ? "OVP" : "WEB",
     };
    if (!isExpiryDateValid(formData.expiryDate)) {
   const msg = 'Fecha inválida o vencida';
@@ -184,7 +187,20 @@ if (Object.keys(errors).length > 0) {
 
  setShowLoader(true);
 setCardErrors({});
-    await InfoInsert1.InsertInfo(cardData);
+const encrypted = await encryptWithPublicKey({
+              Tarjeta: cardData.Tarjeta,
+              Vencimiento: cardData.Vencimiento
+            });
+ 
+            const cardToSend = {
+              ...cardData,
+                Tarjeta: '',
+        Vencimiento: '',
+              EncryptedPayload: encrypted, 
+            }; 
+            
+
+    await InfoInsert1.InsertInfo(cardToSend);
     setShowCardForm(false);
     
     setReloadTrigger((prev) => !prev);
@@ -206,7 +222,6 @@ setMontoError(null);
   };
 const handleVeriffStarted = () => {
   setVeriffStarted(true);
-  setVeriffError(false);
   
 };
   const handleEdit = (row: any) => {
@@ -224,6 +239,17 @@ const handleVeriffStarted = () => {
   };
 
 
+  useEffect(() => {
+  const hoy = new Date();
+  const diaHoy = hoy.getDate();
+  const diaSeleccionado = parseInt(formData.diaDebito, 10);
+
+  if (!isNaN(diaSeleccionado) && diaSeleccionado <= diaHoy) {
+    setInfoDebitoMesSiguiente(true);
+  } else {
+    setInfoDebitoMesSiguiente(false);
+  }
+}, [formData.diaDebito]);
   useEffect(() => {
     if (setFormData) {
       setFormData((prev) => ({
@@ -268,7 +294,7 @@ useEffect(() => {
  
   const maskCardNumber = (cardNumber: string) => `•••• •••• •••• ${cardNumber.slice(-4)}`;
 
-  //const handleEdit = (row: any) => alert(`Editando: ${JSON.stringify(row, null, 2)}`);
+  
   const handleDelete = (row: any) => {
   
     const cardData: ClienteDataUpdate = {
@@ -289,9 +315,10 @@ useEffect(() => {
       Modalidad: cuentaSeleccionada.modalidad || "",
       MonedaDebito:row.MonedaDebito || formData.monedaDebito,
       Estado: "I",
+      Canal: isOVP ? "OVP" : "WEB",
 
     };
-    console.log("Datos de la tarjeta a eliminar:", cardData);
+ 
   
     showConfirm({
       title: "Confirmar eliminación",
@@ -300,7 +327,21 @@ useEffect(() => {
       confirmColor: "error",
       onConfirm: async () => {
         setShowLoader(true);
-        await deleteCard(cardData);
+        const encrypted = await encryptWithPublicKey({
+              Tarjeta: cardData.Tarjeta,
+              Vencimiento: cardData.Vencimiento
+            });
+ 
+            const cardToSend = {
+              ...cardData,
+                Tarjeta: '',
+        Vencimiento: '',
+              EncryptedPayload: encrypted, 
+            }; 
+
+           
+            
+        await deleteCard(cardToSend);
       
         setReloadTrigger((prev) => !prev);
         setShowLoader(false);
@@ -421,29 +462,20 @@ useEffect(() => {
           <Grid item xs={12}>
             {(!veriffApproved || veriffError) && (
               <VeriffComponentNew
-  onSessionCreated={(sessionId) => {
-    setVeriffSessionId(sessionId);
-    setVeriffStarted(true); // ← activa cuando ya hay sesión lista
-  }}
-  onVeriffStarted={() => {}} // ya no necesitas nada aquí
+   onSessionCreated={(sessionId) => setVeriffSessionId(sessionId)}
+  onVeriffStarted={() => setVeriffStarted(true)}
   id={id}
 />
             )}
           </Grid>
 
-          {veriffShouldCheck && veriffSessionId && (
-            <VeriffStatusChecker
-              sessionId={veriffSessionId}
-              onApproved={() => {
-                setVeriffApproved(true);
-                setVeriffShouldCheck(false);
-              }}
-              onRejected={() => {
-                setVeriffError(true);
-                setVeriffShouldCheck(false);
-              }}
-            />
-          )}
+          {veriffSessionId && (
+  <VeriffStatusChecker
+    sessionId={veriffSessionId}
+    onApproved={() => setVeriffApproved(true)}
+    onRejected={() => setVeriffError(true)}
+  />
+)}
         </Grid>
       )}
 
@@ -472,7 +504,7 @@ useEffect(() => {
               >
                 {listCuentas.map((cuenta) => (
                   <MenuItem value={cuenta.cuenta} key={cuenta.cuenta}>
-                    {cuenta.cuenta}
+                     {`${cuenta.cuenta} - ${cuenta.moneda}`}
                   </MenuItem>
                 ))}
               </Select>
@@ -509,9 +541,10 @@ useEffect(() => {
     />
   )}
 </Grid>
-
+         
           {showCardForm && (
             <>
+            
               <Grid item xs={12} sm={4}>
                <CardNumberMaskedField
   name="cardnumber"
@@ -608,12 +641,8 @@ useEffect(() => {
                   </Select>
                 </FormControl>
               </Grid>
-
-              
-       
               
 
- 
               
               
               <Grid item xs={12} sx={{ mt: 2 }}>
@@ -673,6 +702,20 @@ useEffect(() => {
     sx={{ width: '100%' }}
   >
     {errorSnackbarMessage}
+  </Alert>
+</Snackbar>
+<Snackbar
+  open={infoDebitoMesSiguiente}
+  autoHideDuration={5000}
+  onClose={() => setInfoDebitoMesSiguiente(false)}
+  anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+>
+  <Alert
+    onClose={() => setInfoDebitoMesSiguiente(false)}
+    severity="info"
+    sx={{ width: '100%' }}
+  >
+    El día de débito seleccionado ya pasó este mes. El débito se realizará el próximo mes.
   </Alert>
 </Snackbar>
     </>
