@@ -58,7 +58,7 @@ export function saveTokenFromUrl() {
       path: '/',
       expires: 1, 
       sameSite: 'Strict',
-      secure: false, 
+      secure: true, 
     });
 
     
