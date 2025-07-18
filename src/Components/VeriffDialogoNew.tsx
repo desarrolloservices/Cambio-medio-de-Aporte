@@ -40,9 +40,9 @@ const VeriffComponentNew: React.FC<Props> = ({ onSessionCreated, onVeriffStarted
       setLoading(false);
       loadVeriffSDK().then(() => {
         if (status !== "approved" && status !== "rejected") {
-          // El usuario no ha terminado aún, debe iniciar verificación
+        
         } else {
-          onVeriffStarted(); // ya hay estado
+          onVeriffStarted(); 
         }
       });
       return;

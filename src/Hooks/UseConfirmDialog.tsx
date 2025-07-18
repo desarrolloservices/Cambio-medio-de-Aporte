@@ -22,10 +22,10 @@ export const useConfirmDialog = () => {
     if (!options?.onConfirm) return;
     setLoading(true);
     try {
-      await options.onConfirm(); // espera correctamente
+      await options.onConfirm(); 
     } finally {
       setLoading(false);
-      setOpen(false); // solo se cierra cuando TODO ha terminado
+      setOpen(false); 
     }
   };
 

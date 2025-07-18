@@ -9,7 +9,7 @@ interface CustomProps {
   placeholder?: string;
   error?: boolean;
   helperText?: string;
-  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void; // acepta ChangeEvent real
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void; 
 }
 
 const TextMaskCustom = React.forwardRef<HTMLInputElement, CustomProps>(

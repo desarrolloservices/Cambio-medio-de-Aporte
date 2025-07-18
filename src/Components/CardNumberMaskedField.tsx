@@ -18,14 +18,14 @@ const CardMaskCustom = React.forwardRef<HTMLInputElement, any>(
     return (
       <IMaskInput
         {...other}
-        mask="0000 0000 0000 0000[ 000]" // admite hasta 19 dígitos con formato de tarjeta
+        mask="0000 0000 0000 0000[ 000]" 
         overwrite
         inputRef={ref}
         onAccept={(value: any) =>
           onChange({
             target: {
               name: props.name,
-              value: value.replace(/\s/g, ""), // sin espacios para validar/guardar
+              value: value.replace(/\s/g, ""), 
             },
           } as React.ChangeEvent<HTMLInputElement>)
         }

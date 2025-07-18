@@ -56,7 +56,7 @@ const useCliente = () => {
     cliente,
     loading,
     error,
-    clienteValido, // booleano útil para decisiones en UI
+    clienteValido,
   };
 };
 

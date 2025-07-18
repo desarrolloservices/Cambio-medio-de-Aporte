@@ -13,7 +13,7 @@ const UseDeleteCard = () => {
     try {
       const payload: ClienteDataUpdate = {
         ...cardData,
-        Estado: 'I', // soft delete
+        Estado: 'I',
       };
           
       await InfoActualiza1.UpdateInfo(payload);
