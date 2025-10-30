@@ -51,16 +51,28 @@ function generateFakeId(): number {
 export function saveTokenFromUrl() {
   const params = new URLSearchParams(window.location.search);
   const token = params.get('tokenid');
+  const code= params.get('code');
+
+
+  if (code) {
+    
+    Cookies.set('id', code, {
+      path: '/',
+      expires: 0.5, 
+      sameSite: 'Strict',
+      secure: false, 
+    })};
 
   if (token) {
     
     Cookies.set('tokenid', token, {
       path: '/',
-      expires: 1, 
+      expires: 0.5, 
       sameSite: 'Strict',
       secure: true, 
     });
 
+    
     
     const fakeId = generateFakeId();
     params.delete('tokenid');

@@ -80,6 +80,11 @@ export const instanceInsert1 = axios.create({
   withCredentials: true,                
 });
 
+export const instanceCode = axios.create({
+  baseURL:  process.env.REACT_APP_API_TK,
+  withCredentials: true,                
+});
+
 export const instanceGetSession1 = axios.create({
   baseURL:  process.env.REACT_APP_API_WHOOK,
   withCredentials: true,               
@@ -95,50 +100,41 @@ export const instanceVerificar1 = axios.create({
 
 
 export const validateToken1 = {
-  
   getToken: function () {
-    
-    const tokenid = Cookies.get('tokenid');
-    
-
     return instanceToken1.get('', {
       headers: {
-        "Content-Type": "application/json",
-        "x-api-key": process.env.REACT_APP_API_SECRET_KEY ?? '',
-        "AuthorizationAFP": tokenid ?? '',
-       
+        'Content-Type': 'application/json',
+        // Si tu BFF exige API key, déjala; si no, quítala:
+        'x-api-key': process.env.REACT_APP_API_SECRET_KEY ?? '',
       },
-      withCredentials: true, 
+      withCredentials: true,
     });
   },
 };
 
 export const InfoCliente1 = {
-  obtieneInfo: function () {
-    const tokenid = Cookies.get('tokenid'); 
-    return instanceCliente1.get('', {
+  obtieneInfo() {
+    return instanceCliente1.get("", {
       headers: {
         "Content-Type": "application/json",
-        "x-api-key": process.env.REACT_APP_API_SECRET_KEY ?? '',
-        AuthorizationAFP: tokenid ?? '',
-       
+        // Si tu BFF valida api key, déjala; si no, quítala:
+        "x-api-key": process.env.REACT_APP_API_SECRET_KEY ?? "",
       },
-      withCredentials: true,
+      withCredentials: true, // ← imprescindible para que el browser envíe la cookie
     });
   },
 };
 
-export const InfoProductos1 = {
-  obtieneInfo: function () {
-    const tokenid = Cookies.get('tokenid'); // 
 
+export const InfoProductos1 = {
+  obtieneInfo() {
     return instanceProductos1.get('', {
       headers: {
-        "Content-Type": "application/json",
-        AuthorizationAFP: tokenid ?? '',
-       "x-api-key": process.env.REACT_APP_API_SECRET_KEY ?? '',
+        'Content-Type': 'application/json',
+        // Si tu BFF valida API key, déjala; si no, quítala:
+        'x-api-key': process.env.REACT_APP_API_SECRET_KEY ?? '',
       },
-      withCredentials: true,
+      withCredentials: true, // imprescindible para que el navegador mande la cookie
     });
   },
 };
@@ -174,6 +170,7 @@ export const InfoInsertaVeriff1 = {
     return instanceVerificar1.post('', data, {
       headers: {
         "Content-Type": "application/json",
+         "x-api-key": process.env.REACT_APP_API_SECRET_KEY ?? '',
       },
       withCredentials: true,
     });
@@ -183,7 +180,7 @@ export const InfoInsertaVeriff1 = {
 export const InfoConsulta1 = {
   InfoConsulta: function (cuenta: string) {
     const cta = { cuenta: cuenta,canal: "OVP" };
-
+     
     return instanceConsulta1.post('', cta, {
       headers: {
         "Content-Type": "application/json",
@@ -194,12 +191,27 @@ export const InfoConsulta1 = {
   },
 };
 
+export const InfoCodeExchange = {
+  InfoCode: function (code: string | '') {
+    const body = { code };
+
+    return instanceCode.post('', body, {
+      headers: {
+        'Content-Type': 'application/json',
+        // Mantén la API key si tu BFF la valida; si no, elimínala:
+        'x-api-key': process.env.REACT_APP_API_SECRET_KEY ?? '',
+      },
+      withCredentials: true, // imprescindible para aceptar la cookie
+    });
+  },
+};
+
 
 export const validateSession1 = {
   obtieneSession: function (session: string) {
    
 
-    return instanceGetSession1.get(`/validatesession?session=${session}`, {
+    return instanceGetSession1.get(`/validatesessionfm?session=${session}`, {
       headers: {
         "Content-Type": "application/json",
         "x-api-key": process.env.REACT_APP_API_SECRET_KEY ?? '',

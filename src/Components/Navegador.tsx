@@ -9,13 +9,13 @@ interface Props {
 
 const Navegador: React.FC<Props> = () => {
 
-    const {handleBack,handleNext,activeStep,formData} = useContext(FormContext);
+    const {handleBack,handleNext,activeStep} = useContext(FormContext);
 
     return (
         <Grid container mt={5} mb={5}>
             {
                 activeStep === 0 ? <Grid item xs={12}>
-                <Button onClick={()=>console.log(formData)} variant='outlined'>Solicitar</Button>
+                <Button variant='outlined'>Solicitar</Button>
                 </Grid> : null
             }
             {

@@ -1,5 +1,4 @@
-// ValidateSession.tsx  –  PING cada 10 s hasta approved / rejected
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { validateSession1 } from '../Data/GetDatosClientes';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
@@ -7,49 +6,54 @@ import Cookies from 'js-cookie';
 
 interface Props {
   sessionId: string;
+  active: boolean;          // controla el inicio del polling
   onApproved: () => void;
   onRejected: () => void;
 }
 
-const VeriffStatusChecker = ({ sessionId, onApproved, onRejected }: Props) => {
+// CHG: todo en lowercase (evita problemas con APPROVED/Approved/etc)
+const FINAL_STATUSES = new Set(['approved', 'declined', 'rejected', 'expired', 'error']);
+
+const VeriffStatusChecker = ({ sessionId, active, onApproved, onRejected }: Props) => {
   const [status, setStatus] = useState<string | null>(null);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
-    if (!sessionId) return;
+    if (!sessionId || !active) return;
 
-    
     const fetchStatus = async () => {
       try {
         const res = await validateSession1.obtieneSession(sessionId);
-        const vStatus: string | null = res.data.verification?.status ?? null;
-
-        
-
-        setStatus(vStatus);        
+        // CHG: normalizar a lowercase
+        const raw = res.data?.veriffStatus ?? null;
+        const vStatus: string | null = typeof raw === 'string' ? raw.toLowerCase() : null;
+        setStatus(vStatus);
 
         if (vStatus === 'approved') {
-          clearInterval(id);
-          onApproved();
+          if (timerRef.current) clearInterval(timerRef.current);
           Cookies.set('veriffStatus', 'approved', { path: '/', sameSite: 'Strict', expires: 1 });
-        } else if (vStatus === 'rejected') {
-          clearInterval(id);
-          onRejected();
+          onApproved();
+        } else if (vStatus && FINAL_STATUSES.has(vStatus)) {
+          if (timerRef.current) clearInterval(timerRef.current);
           Cookies.set('veriffStatus', 'rejected', { path: '/', sameSite: 'Strict', expires: 1 });
+          onRejected();
         }
+        // si está pendiente, seguimos intentando
       } catch (err) {
-        
+        // error transitorio -> seguir polling
+        // console.error('validateSession error:', err);
       }
     };
 
-    
-    fetchStatus();                             
-    const id = setInterval(fetchStatus, 4_000); 
+    fetchStatus(); // primer intento
+    timerRef.current = setInterval(fetchStatus, 4000);
 
-    
-    return () => clearInterval(id);
-  }, [sessionId, onApproved, onRejected]);
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+      timerRef.current = null;
+    };
+  }, [sessionId, active, onApproved, onRejected]);
 
- 
   return (
     <div style={{ textAlign: 'center', marginTop: '1rem' }}>
       {status === 'approved' && (
@@ -59,14 +63,12 @@ const VeriffStatusChecker = ({ sessionId, onApproved, onRejected }: Props) => {
         </p>
       )}
 
-      {status === 'rejected' && (
+      {status && status !== 'approved' && FINAL_STATUSES.has(status) && (
         <p style={{ color: 'red', fontWeight: 'bold', fontSize: '1.2rem' }}>
           <ErrorOutlineIcon sx={{ verticalAlign: 'middle', mr: 1 }} />
-          Verificación rechazada. Por favor, intente de nuevo.
+          Verificación {status === 'declined' ? 'declinada' : 'rechazada/expirada'}. Por favor, intente de nuevo.
         </p>
       )}
-
-      {status === null && <p></p>}
     </div>
   );
 };

@@ -9,14 +9,19 @@ interface ClienteContextType {
   error: string | null;
 }
 
+interface ClienteProviderProps {
+  children: React.ReactNode;
+  enabled?: boolean;
+}
+
 const ClienteContext = createContext<ClienteContextType>({
   cliente: null,
   loading: true,
   error: null,
 });
 
-export const ClienteProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { cliente, loading, error } = useCliente();
+export const ClienteProvider: React.FC<ClienteProviderProps> = ({ children, enabled = true }) => {
+  const { cliente, loading, error } = useCliente({ enabled });
 
   return (
     <ClienteContext.Provider value={{ cliente, loading, error }}>

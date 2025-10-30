@@ -114,7 +114,7 @@ const { validateCard, getCardType } = useCardValidator();
   const { isExpiryDateValid } = useExpiryDateValidator();
   const [errorSnackbarOpen, setErrorSnackbarOpen] = useState(false);
 const [errorSnackbarMessage, setErrorSnackbarMessage] = useState("");
-const [infoDebitoMesSiguiente, setInfoDebitoMesSiguiente] = useState(false);
+  const [infoDebitoMesSiguiente, setInfoDebitoMesSiguiente] = useState(false);
 
 const showError = (message: string) => {
   setErrorSnackbarMessage(message);
@@ -258,7 +258,7 @@ const handleVeriffStarted = () => {
         sumaAsegurada: planSeleccionado.sumaAsegurada,
         cuenta: cuentaSeleccionada.cuenta,
         moneda: cuentaSeleccionada.moneda,
-        aporte: cuentaSeleccionada.aporte.toString(),
+       
         contrato:cuentaSeleccionada.contrato,
         modalidad:cuentaSeleccionada.modalidad
       }));
@@ -472,6 +472,7 @@ useEffect(() => {
           {veriffSessionId && (
   <VeriffStatusChecker
     sessionId={veriffSessionId}
+    active={veriffStarted && !veriffApproved && !veriffError}
     onApproved={() => setVeriffApproved(true)}
     onRejected={() => setVeriffError(true)}
   />

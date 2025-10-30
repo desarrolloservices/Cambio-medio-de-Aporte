@@ -1,78 +1,65 @@
-import { useState, useEffect } from "react";
+// Hooks/UseProductosCliente.ts
+import { useEffect, useState } from "react";
 import { InfoProductos1 } from "../Data/GetDatosClientes";
-import { cuenta } from '../Interfaces/Tipos';
-import Cookies from "js-cookie";
+import type { cuenta } from "../Interfaces/Tipos";
+import axios from "axios";
 
-const useProductos = () => {
-    const [listCuentas, setListCuentas] = useState<cuenta[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
+type Options = { enabled?: boolean };
 
-    useEffect(() => {
-        const getProductos = async () => {
-            // Esperar que la cookie esté disponible
-            let retries = 0;
-            let token = Cookies.get("tokenid");
+const useProductos = ({ enabled = false }: Options = {}) => {
+  const [listCuentas, setListCuentas] = useState<cuenta[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError]   = useState<string | null>(null);
 
-            while (!token && retries < 10) {
-                await new Promise((res) => setTimeout(res, 100));
-                token = Cookies.get("tokenid");
-                retries++;
-            }
+  useEffect(() => {
+    if (!enabled) return;                 // ⬅️ espera a que haya sesión válida
+    let cancelled = false;
 
-            if (!token) {
-                setError("Token no disponible.");
-                setLoading(false);
-                return;
-            }
+    const run = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const resp = await InfoProductos1.obtieneInfo(); // withCredentials: true
+        const datos = Array.isArray(resp.data) ? resp.data : [];
 
-            setLoading(true);
-            setError(null);
-            let productosLoad: cuenta[] = [];
-
-            try {
-                const respuestaProductos = await InfoProductos1.obtieneInfo();
-                respuestaProductos.data.forEach((producto: any) => {
-                    const apseguro = producto.aplica_seguro === "S";
-                    const tipo = producto.tipo;
-                    const estado = producto.estado;
-                    const modalidad = tipo.split('|').pop()?.trim();
-                    if (
-                        (tipo.substring(0, 3) === "CON" ||
-                            tipo.substring(0, 3) === "Pen") &&
-                        estado !== 'L'
-                    ) {
-                        const monedaP = producto.moneda === "LPS" ? "LEMPIRAS" : "DOLARES";
-
-                        productosLoad.push({
-                            cuenta: producto.descripcion,
-                            tiene_seguro: apseguro,
-                            prima: producto.prima_seguro,
-                            forma_pago: producto.forma_pago,
-                            moneda: monedaP,
-                            aporte: producto.aporte,
-                            contrato:producto.contrato,
-                            modalidad:modalidad
-                        });
-                    }
-                });
-                setListCuentas(productosLoad);
-            } catch (err) {
-                setError("Error al cargar las cuentas. Por favor, intenta de nuevo más tarde.");
-               
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        getProductos();
-    }, []);
-
-    return {
-        listCuentas,
-        loading,
-        error,
+        const productosLoad: cuenta[] = [];
+        for (const p of datos) {
+          const tipo: string = p?.tipo ?? "";
+          const estado: string = p?.estado ?? "";
+          const aplica = (p?.aplica_seguro ?? "") === "S";
+          const modalidad = tipo.split("|").pop()?.trim();
+          if ((tipo.substring(0, 3) === "CON" || tipo.substring(0, 3) === "Pen") && estado !== "L") {
+            const monedaP = (p?.moneda ?? "") === "LPS" ? "LEMPIRAS" : "DOLARES";
+            productosLoad.push({
+              cuenta: p?.descripcion ?? "",
+              tiene_seguro: aplica,
+              prima: p?.prima_seguro ?? 0,
+              forma_pago: p?.forma_pago ?? "",
+              moneda: monedaP,
+              aporte: p?.aporte ?? 0,
+              contrato: p?.contrato ?? "",
+              modalidad: modalidad ?? "",
+            });
+          }
+        }
+        if (!cancelled) setListCuentas(productosLoad);
+      } catch (e) {
+        if (cancelled) return;
+        if (axios.isAxiosError(e) && e.response?.status === 401) {
+          setError("Sesión no válida (401). Intente abrir nuevamente el enlace.");
+        } else {
+          setError("Ocurrió un error al cargar productos.");
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
     };
+
+    run();
+    return () => { cancelled = true; };
+  }, [enabled]);
+
+  return { listCuentas, loading, error };
 };
 
 export default useProductos;
