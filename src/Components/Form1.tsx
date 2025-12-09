@@ -123,6 +123,7 @@ const showError = (message: string) => {
   const { rawData, loadingData } = useExtractRawData({
     cuenta: cuentaSeleccionada.cuenta,
     trigger: reloadTrigger,
+    enabled: isValid === true && !!cuentaSeleccionada.cuenta,
   });
   const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 

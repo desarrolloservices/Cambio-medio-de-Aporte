@@ -180,7 +180,7 @@ export const InfoInsertaVeriff1 = {
 export const InfoConsulta1 = {
   InfoConsulta: function (cuenta: string) {
     const cta = { cuenta: cuenta,canal: "OVP" };
-     
+   
     return instanceConsulta1.post('', cta, {
       headers: {
         "Content-Type": "application/json",
