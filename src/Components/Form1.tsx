@@ -130,13 +130,14 @@ const showError = (message: string) => {
   const confirmAddCard = async () => {
 
     const monto = parseFloat(formData.monto);
-    if (monto < 0) {
-  setMontoError("No se permiten montos negativos");
-  showError("No se permiten montos negativos");
+    if (isNaN(monto) || monto < 0) {
+  setMontoError("No se permiten montos negativos o vacíos");
+  showError("No se permiten montos negativos o vacíos");
   return;
 }
 
-  const moneda = formData.monedaDebito;
+  // Usar la moneda de la cuenta seleccionada para la validación
+  const moneda = cuentaSeleccionada.moneda || formData.monedaDebito;
 
   
 if (
@@ -481,7 +482,7 @@ useEffect(() => {
         </Grid>
       )}
 
-      {(!isOVP || (isOVP && veriffApproved))  && (
+      {isOVP !== null && (!isOVP || (isOVP && veriffApproved))  && (
         <Grid container spacing={2} rowSpacing={4} top={4} mb={5}>
           <Grid item xs={12}>
             <FormControl variant="outlined" fullWidth>

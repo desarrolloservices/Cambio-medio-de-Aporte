@@ -157,7 +157,7 @@ const AppContent: React.FC = () => {
               mb={2}
             >
               <Typography variant="h3" color={theme.palette.primary.main}>
-                Modifica tu medio de aporte <br /> de Tarjeta de Credito
+                Modifica tu medio de aporte <br /> de Tarjeta de Crédito
               </Typography>
             </Grid>
 
@@ -167,17 +167,17 @@ const AppContent: React.FC = () => {
 
             <Grid item xs={12} mb={3}>
               <Typography variant="h6" color={theme.palette.secondary.main}>
-                Impulsa tu patrimonio! Actualiza e incrementa tu aporte. Para tu
-                comodidad, puedes establecer debitos automaticos con tu tarjeta de
-                credito o debito.
+                ¡Impulsa tu patrimonio! Actualiza e incrementa tu aporte. Para tu
+                comodidad, puedes establecer débitos automáticos con tu Tarjeta de Crédito o Débito.
+               
               </Typography>
               <br />
               {isOVP && (
                 <Typography variant="h5" color={theme.palette.secondary.main}>
                   <strong>
                     Importante: Por tu seguridad, para continuar debes verificar tu
-                    informacion. Este formulario estara disponible durante las
-                    proximas 48 horas.
+                    información. Este formulario estará disponible durante las
+                    próximas 48 horas.
                   </strong>
                 </Typography>
               )}
