@@ -29,6 +29,7 @@ import VeriffComponentNew from "./VeriffDialogoNew";
 import VeriffStatusChecker from "./ValidateSession";
 import { useClienteContext } from "../Context/ClienteContext";
 import { IMask, IMaskInput } from "react-imask";
+import { NumericFormat } from "react-number-format";
 import { InfoInsert1 } from "../Data/GetDatosClientes";
 import UseDeleteCard from "../Hooks/UseDeleteCard";
 import { useEditDialog } from "../Context/EditDialogContext";
@@ -43,6 +44,7 @@ import { useExpiryDateValidator } from '../Hooks/useExpiryDateValidator';
 import CardTypeDisplay from "../Components/CardTypeDisplay";
 import CardNumberMaskedField from "../Components/CardNumberMaskedField";
 import { encryptWithPublicKey } from "../Utils/encryptWithPublicKey";
+import Cookies from "js-cookie";
 
 
 interface Props {
@@ -81,6 +83,45 @@ const TextMaskCustom = React.forwardRef<HTMLInputElement, CustomProps>(
         onAccept={(value: any) =>
           onChange({ target: { name: props.name, value } })
         }
+      />
+    );
+  }
+);
+
+function getCurrencyPrefix(moneda?: string) {
+  const m = (moneda ?? "").trim().toUpperCase();
+  if (m === "LEMPIRAS" || m === "L" || m === "LPS") return "L ";
+  if (m === "DOLARES" || m === "DÓLARES" || m === "$" || m === "USD") return "$ ";
+  return "";
+}
+
+interface CurrencyFormatCustomProps {
+  onChange: (event: { target: { name: string; value: string } }) => void;
+  name: string;
+  prefix?: string;
+}
+
+const CurrencyFormatCustom = React.forwardRef<any, CurrencyFormatCustomProps>(
+  function CurrencyFormatCustom(props, ref) {
+    const { onChange, prefix, ...other } = props;
+    return (
+      <NumericFormat
+        {...other}
+        getInputRef={ref}
+        onValueChange={(values) => {
+          onChange({
+            target: {
+              name: props.name,
+              value: values.value,
+            },
+          });
+        }}
+        valueIsNumericString
+        thousandSeparator=","
+        decimalScale={2}
+        fixedDecimalScale
+        allowNegative={false}
+        prefix={prefix}
       />
     );
   }
@@ -283,6 +324,13 @@ const handleVeriffStarted = () => {
     setVeriffShouldCheck(true);
   }
   }, [veriffStarted, veriffSessionId]);
+
+  // Si la sesión Veriff ya fue validada (cookie), no mostrar el botón y mostrar los datos al refrescar
+  useEffect(() => {
+    if (isOVP === true && Cookies.get("veriffStatus") === "approved") {
+      setVeriffApproved(true);
+    }
+  }, [isOVP]);
   useEffect(() => {
   if (rawData.length === 0) {
     setShowCardForm(true);
@@ -601,14 +649,19 @@ useEffect(() => {
       name="monto"
       label="Monto del Aporte"
       variant="outlined"
-      type="number"
       value={formData.monto}
       onChange={handleInputChange}
       fullWidth
       required
       error={!!montoError}
       helperText={montoError}
-      InputLabelProps={{ shrink: true }}  
+      InputLabelProps={{ shrink: true }}
+      InputProps={{
+        inputComponent: CurrencyFormatCustom as any,
+      }}
+      inputProps={{
+        prefix: getCurrencyPrefix(cuentaSeleccionada.moneda || formData.monedaDebito),
+      }}
     />
   </FormControl>
 </Grid>

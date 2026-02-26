@@ -14,6 +14,7 @@ import {
   Alert,
 } from "@mui/material";
 import { IMaskInput } from "react-imask";
+import { NumericFormat } from "react-number-format";
 import { useEditDialog } from "../Context/EditDialogContext";
 import UseUpdateCard from "../Hooks/UseUpdateCard";
 import ConfirmDialog from './ConfirmDialog';
@@ -41,6 +42,45 @@ const TextMaskCustom = React.forwardRef<HTMLInputElement, any>(
           onChange({ target: { name: props.name, value } })
         }
         overwrite
+      />
+    );
+  }
+);
+
+function getCurrencyPrefix(moneda?: string) {
+  const m = (moneda ?? "").trim().toUpperCase();
+  if (m === "LEMPIRAS" || m === "L" || m === "LPS") return "L ";
+  if (m === "DOLARES" || m === "DÓLARES" || m === "$" || m === "USD") return "$ ";
+  return "";
+}
+
+interface CurrencyFormatCustomProps {
+  onChange: (event: { target: { name: string; value: string } }) => void;
+  name: string;
+  prefix?: string;
+}
+
+const CurrencyFormatCustom = React.forwardRef<any, CurrencyFormatCustomProps>(
+  function CurrencyFormatCustom(props, ref) {
+    const { onChange, prefix, ...other } = props;
+    return (
+      <NumericFormat
+        {...other}
+        getInputRef={ref}
+        onValueChange={(values) => {
+          onChange({
+            target: {
+              name: props.name,
+              value: values.value,
+            },
+          });
+        }}
+        valueIsNumericString
+        thousandSeparator=","
+        decimalScale={2}
+        fixedDecimalScale
+        allowNegative={false}
+        prefix={prefix}
       />
     );
   }
@@ -194,7 +234,7 @@ if (cardValidationError || expiryValidationError) {
   fullWidth
   margin="normal"
   label="Monto"
-  type="number"
+  name="monto"
   value={monto}
   onChange={(e) => {
     setMonto(e.target.value);
@@ -202,6 +242,12 @@ if (cardValidationError || expiryValidationError) {
   }}
   error={!!montoError}
   helperText={montoError}
+  InputProps={{
+    inputComponent: CurrencyFormatCustom as any,
+  }}
+  inputProps={{
+    prefix: getCurrencyPrefix(monedaDebito),
+  }}
 />
 
          
