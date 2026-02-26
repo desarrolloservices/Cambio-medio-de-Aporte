@@ -105,7 +105,7 @@ if (isNaN(montoNumerico) || montoNumerico < 0) {
 
 if (
   (monedaDebito === "LEMPIRAS" && montoNumerico < 250) ||
-  (monedaDebito === "DÓLARES" && montoNumerico < 20)
+  ((monedaDebito === "DOLARES" || monedaDebito === "DÓLARES") && montoNumerico < 20)
 ) {
   setMontoError(
     monedaDebito === "LEMPIRAS"
@@ -267,7 +267,6 @@ if (cardValidationError || expiryValidationError) {
       {/* Snackbar para mensaje de éxito */}
       <Snackbar
         open={snackbarOpen}
-        autoHideDuration={3000}
         onClose={() => setSnackbarOpen(false)}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
       >

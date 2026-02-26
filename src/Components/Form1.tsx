@@ -115,6 +115,7 @@ const { validateCard, getCardType } = useCardValidator();
   const [errorSnackbarOpen, setErrorSnackbarOpen] = useState(false);
 const [errorSnackbarMessage, setErrorSnackbarMessage] = useState("");
   const [infoDebitoMesSiguiente, setInfoDebitoMesSiguiente] = useState(false);
+  const [usuarioTocoDiaDebito, setUsuarioTocoDiaDebito] = useState(false);
 
 const showError = (message: string) => {
   setErrorSnackbarMessage(message);
@@ -142,7 +143,7 @@ const showError = (message: string) => {
   
 if (
   (moneda === 'LEMPIRAS' && monto < 250) ||
-  (moneda === 'DÓLARES' && monto < 20)
+  ((moneda === 'DOLARES' || moneda === 'DÓLARES') && monto < 20)
 ) {
   const msg = moneda === 'LEMPIRAS'
     ? 'El monto mínimo para Lempiras es L 250'
@@ -246,12 +247,12 @@ const handleVeriffStarted = () => {
   const diaHoy = hoy.getDate();
   const diaSeleccionado = parseInt(formData.diaDebito, 10);
 
-  if (!isNaN(diaSeleccionado) && diaSeleccionado <= diaHoy) {
+  if (usuarioTocoDiaDebito && !isNaN(diaSeleccionado) && diaSeleccionado <= diaHoy) {
     setInfoDebitoMesSiguiente(true);
   } else {
     setInfoDebitoMesSiguiente(false);
   }
-}, [formData.diaDebito]);
+}, [formData.diaDebito, usuarioTocoDiaDebito]);
   useEffect(() => {
     if (setFormData) {
       setFormData((prev) => ({
@@ -285,6 +286,8 @@ const handleVeriffStarted = () => {
   useEffect(() => {
   if (rawData.length === 0) {
     setShowCardForm(true);
+  } else {
+    setShowCardForm(false);
   }
 }, [rawData]);
 useEffect(() => {
@@ -631,7 +634,10 @@ useEffect(() => {
                     label="Día del débito"
                     name="diaDebito"
                     value={formData.diaDebito}
-                    onChange={handleSelectChange}
+                    onChange={(e) => {
+                      handleSelectChange(e);
+                      setUsuarioTocoDiaDebito(true);
+                    }}
                   >
                     {[...Array(30)].map((_, i) => {
                       const val = (i + 1).toString();
@@ -681,7 +687,6 @@ useEffect(() => {
 />
 <Snackbar
   open={snackbarOpen}
-  autoHideDuration={3000}
   onClose={() => setSnackbarOpen(false)}
   anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
 >
@@ -695,7 +700,6 @@ useEffect(() => {
 </Snackbar>
 <Snackbar
   open={errorSnackbarOpen}
-  autoHideDuration={4000}
   onClose={() => setErrorSnackbarOpen(false)}
   anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
 >
@@ -709,7 +713,6 @@ useEffect(() => {
 </Snackbar>
 <Snackbar
   open={infoDebitoMesSiguiente}
-  autoHideDuration={5000}
   onClose={() => setInfoDebitoMesSiguiente(false)}
   anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
 >
