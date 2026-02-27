@@ -46,7 +46,7 @@ const useProductos = ({ enabled = false }: Options = {}) => {
       } catch (e) {
         if (cancelled) return;
         if (axios.isAxiosError(e) && e.response?.status === 401) {
-          setError("Sesión no válida (401). Intente abrir nuevamente el enlace.");
+          setError("El enlace ya fue utilizado.");
         } else {
           setError("Ocurrió un error al cargar productos.");
         }

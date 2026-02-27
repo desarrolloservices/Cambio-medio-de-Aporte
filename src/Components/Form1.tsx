@@ -45,6 +45,7 @@ import CardTypeDisplay from "../Components/CardTypeDisplay";
 import CardNumberMaskedField from "../Components/CardNumberMaskedField";
 import { encryptWithPublicKey } from "../Utils/encryptWithPublicKey";
 import Cookies from "js-cookie";
+import { clearSessionCookies } from "../Data/setCookies";
 
 
 interface Props {
@@ -260,8 +261,15 @@ setFormData?.({
 setCardErrors({});
 setMontoError(null);
  setShowLoader(false);
-  
 
+    showConfirm({
+      title: "Gestión Completada con Éxito",
+      message: "¿Deseas realizar otra operación?",
+      confirmButtonText: "Sí",
+      cancelButtonText: "No",
+      onConfirm: () => setShowCardForm(true),
+      onCancel: clearSessionCookies,
+    });
 
   };
 const handleVeriffStarted = () => {
@@ -400,7 +408,15 @@ useEffect(() => {
         setShowLoader(false);
         setSnackbarMessage("¡Tarjeta eliminada con éxito!");
         setSnackbarOpen(true);
-        
+
+        showConfirm({
+          title: "Gestión Completada con Éxito",
+          message: "¿Deseas realizar otra operación?",
+          confirmButtonText: "Sí",
+          cancelButtonText: "No",
+          onConfirm: () => setShowCardForm(true),
+          onCancel: clearSessionCookies,
+        });
       }
     });
   };
@@ -730,7 +746,19 @@ useEffect(() => {
         </Grid>
       )}
     </form>
-    <EditDialog onUpdateSuccess={() => setReloadTrigger((prev) => !prev)} />
+    <EditDialog
+      onUpdateSuccess={() => {
+        setReloadTrigger((prev) => !prev);
+        showConfirm({
+          title: "Gestión Completada con Éxito",
+          message: "¿Deseas realizar otra operación?",
+          confirmButtonText: "Sí",
+          cancelButtonText: "No",
+          onConfirm: () => setShowCardForm(true),
+          onCancel: clearSessionCookies,
+        });
+      }}
+    />
     <ConfirmDialog
   open={confirmOpen}
   loading={confirmLoading}

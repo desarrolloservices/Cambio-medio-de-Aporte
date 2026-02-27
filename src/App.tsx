@@ -13,7 +13,7 @@ import { LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { FormProvider, FormContext } from "./Context/FormContext";
 import useProductos from "./Hooks/UseProductosCliente";
-import { saveTokenFromUrl } from "./Data/setCookies";
+import { saveTokenFromUrl, getPostLogoutRedirectKey } from "./Data/setCookies";
 import useValidateToken from "./Hooks/UseValidateTk";
 import { ClienteProvider, useClienteContext } from "./Context/ClienteContext";
 import Form1 from "./Components/Form1";
@@ -86,6 +86,16 @@ const AppContent: React.FC = () => {
       }));
     }
   }, [isValid, loading, listCuentas, setFormData]);
+
+  useEffect(() => {
+    if (isValid === false && typeof window !== "undefined") {
+      const key = getPostLogoutRedirectKey();
+      if (sessionStorage.getItem(key)) {
+        sessionStorage.removeItem(key);
+        window.location.href = "https://www.afpatlantida.com";
+      }
+    }
+  }, [isValid]);
 
   if (isValid === null) {
     return (

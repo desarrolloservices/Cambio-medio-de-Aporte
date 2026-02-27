@@ -96,8 +96,22 @@ export const instanceVerificar1 = axios.create({
                  
 });
 
+export const instanceLogout1 = axios.create({
+  baseURL: process.env.REACT_APP_API_LGT,
+  withCredentials: true,
+});
 
-
+export const logoutToken1 = {
+  logout: function () {
+    return instanceLogout1.post('', {}, {
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': process.env.REACT_APP_API_SECRET_KEY ?? '',
+      },
+      withCredentials: true,
+    });
+  },
+};
 
 export const validateToken1 = {
   getToken: function () {

@@ -4,8 +4,10 @@ export interface ConfirmOptions {
   title?: string;
   message: string;
   confirmButtonText?: string;
+  cancelButtonText?: string;
   confirmColor?: 'primary' | 'secondary' | 'error' | 'success';
   onConfirm: () => Promise<void> | void;
+  onCancel?: () => void;
 }
 
 export const useConfirmDialog = () => {
@@ -30,6 +32,7 @@ export const useConfirmDialog = () => {
   };
 
   const handleCancel = () => {
+    options?.onCancel?.();
     setOpen(false);
     setLoading(false);
   };
