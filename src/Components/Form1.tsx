@@ -262,15 +262,17 @@ setCardErrors({});
 setMontoError(null);
  setShowLoader(false);
 
-    showConfirm({
-      title: "Gestión Completada con Éxito",
-      message: "¿Deseas realizar otra operación?",
-      confirmButtonText: "Sí",
-      cancelButtonText: "No",
-      onConfirm: () => setShowCardForm(true),
-      onCancel: clearSessionCookies,
-    });
-
+    // Abrir después de que el hook cierre el modal "¿Deseas registrar?"
+    setTimeout(() => {
+      showConfirm({
+        title: "Gestión Completada con Éxito",
+        message: "¿Deseas realizar otra operación?",
+        confirmButtonText: "Sí",
+        cancelButtonText: "No",
+        onConfirm: () => setShowCardForm(true),
+        onCancel: clearSessionCookies,
+      });
+    }, 0);
   };
 const handleVeriffStarted = () => {
   setVeriffStarted(true);
@@ -409,14 +411,17 @@ useEffect(() => {
         setSnackbarMessage("¡Tarjeta eliminada con éxito!");
         setSnackbarOpen(true);
 
-        showConfirm({
-          title: "Gestión Completada con Éxito",
-          message: "¿Deseas realizar otra operación?",
-          confirmButtonText: "Sí",
-          cancelButtonText: "No",
-          onConfirm: () => setShowCardForm(true),
-          onCancel: clearSessionCookies,
-        });
+        // Abrir después de que el hook cierre el modal "¿Estás seguro de eliminar?"
+        setTimeout(() => {
+          showConfirm({
+            title: "Gestión Completada con Éxito",
+            message: "¿Deseas realizar otra operación?",
+            confirmButtonText: "Sí",
+            cancelButtonText: "No",
+            onConfirm: () => setShowCardForm(true),
+            onCancel: clearSessionCookies,
+          });
+        }, 0);
       }
     });
   };
