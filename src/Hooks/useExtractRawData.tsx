@@ -2,14 +2,16 @@
 import { useEffect, useState } from "react";
 import { InfoConsulta1 } from "../Data/GetDatosClientes";
 import { RawData } from "../Interfaces/Tipos";
+import { resolveAccountCurrency } from "../Utils/currency";
 
 interface useExtractRawDataProps {
   cuenta: string;
   trigger?: any;
   enabled?: boolean;   // ← NUEVO
+  monedaCuenta?: string;
 }
 
-const useExtractRawData = ({ cuenta, trigger, enabled = false }: useExtractRawDataProps) => {
+const useExtractRawData = ({ cuenta, trigger, enabled = false, monedaCuenta }: useExtractRawDataProps) => {
   const [rawData, setRawData] = useState<RawData[]>([]);
   const [loadingData, setLoadingData] = useState(false);
   const [errorData, setErrorData] = useState<string | null>(null);
@@ -35,6 +37,14 @@ const useExtractRawData = ({ cuenta, trigger, enabled = false }: useExtractRawDa
         if (Array.isArray(response.data)) {
           const extractedData: RawData[] = response.data.reduce((acc: RawData[], item: any) => {
             if (item.Estatus.Value !== 'I') {
+              const monedaCCIValue = item.MonedaCCI?.Value;
+              const monedaDebitoValue = item.MonedaDebito?.Value;
+              const monedaAsignada = resolveAccountCurrency(
+                monedaCuenta,
+                monedaDebitoValue,
+                monedaCCIValue
+              );
+
               acc.push({
                 Tarjeta: item.Tarjeta,
                 Aporte: item.Aporte,
@@ -46,7 +56,7 @@ const useExtractRawData = ({ cuenta, trigger, enabled = false }: useExtractRawDa
                 Contrato: item.Contrato,
                 Banco: item.Emisor,
                 Monto: item.Aporte,
-                MonedaDebito: item.MonedaCCI?.Value ?? 'LEMPIRAS',
+                MonedaDebito: monedaAsignada,
               });
             }
             return acc;
@@ -67,7 +77,7 @@ const useExtractRawData = ({ cuenta, trigger, enabled = false }: useExtractRawDa
 
     fetchData();
     return () => { cancel = true; };
-  }, [enabled, cuenta, trigger]);   // ← incluye enabled
+  }, [enabled, cuenta, trigger, monedaCuenta]);   // ← incluye enabled
 
   return { rawData, loadingData, errorData };
 };

@@ -21,9 +21,10 @@ import CreditCardIcon from "@mui/icons-material/CreditCard";
 import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
 import { DataGrid, GridColDef, GridRenderCellParams } from "@mui/x-data-grid";
 import { FormContext } from "../Context/FormContext";
-import { planes, Bancos } from "../CustomData/Planes";
-import { ClienteData, ClienteDataUpdate, cuenta, Plan } from "../Interfaces/Tipos";
+import { Bancos } from "../CustomData/Planes";
+import { ClienteData, ClienteDataUpdate, cuenta } from "../Interfaces/Tipos";
 import useExtractRawData from "../Hooks/useExtractRawData";
+import useCuentasAhorro from "../Hooks/UseCuentasAhorro";
 import useValidateToken from "../Hooks/UseValidateTk";
 import VeriffComponentNew from "./VeriffDialogoNew";
 import VeriffStatusChecker from "./ValidateSession";
@@ -46,6 +47,17 @@ import CardNumberMaskedField from "../Components/CardNumberMaskedField";
 import { encryptWithPublicKey } from "../Utils/encryptWithPublicKey";
 import Cookies from "js-cookie";
 import { clearSessionCookies } from "../Data/setCookies";
+import {
+  getCurrencyMinimum,
+  getCurrencyMinimumMessage,
+  getCurrencyPrefix,
+  normalizeCurrency,
+} from "../Utils/currency";
+import {
+  isSessionExpiredError,
+  notifySessionExpired,
+} from "../Utils/sessionExpired";
+import { calculateInsuranceValues } from "../Utils/insurance";
 
 
 interface Props {
@@ -89,13 +101,6 @@ const TextMaskCustom = React.forwardRef<HTMLInputElement, CustomProps>(
   }
 );
 
-function getCurrencyPrefix(moneda?: string) {
-  const m = (moneda ?? "").trim().toUpperCase();
-  if (m === "LEMPIRAS" || m === "L" || m === "LPS") return "L ";
-  if (m === "DOLARES" || m === "DÓLARES" || m === "$" || m === "USD") return "$ ";
-  return "";
-}
-
 interface CurrencyFormatCustomProps {
   onChange: (event: { target: { name: string; value: string } }) => void;
   name: string;
@@ -130,7 +135,7 @@ const CurrencyFormatCustom = React.forwardRef<any, CurrencyFormatCustomProps>(
 
 
 const Form1: React.FC<Props> = ({ listCuentas, id } ) => {
-  const { isValid, isOVP } = useValidateToken();
+  const { isValid, isLink } = useValidateToken();
   const { cliente } = useClienteContext();
   const [reloadTrigger, setReloadTrigger] = useState(false);
   const { deleteCard, loading, error } = UseDeleteCard();
@@ -149,7 +154,6 @@ const { validateCard, getCardType } = useCardValidator();
   const { openDialog } = useEditDialog();
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
-  const [planSeleccionado, setPlanSeleccionado] = useState<Plan>(planes[0]);
   const [cuentaSeleccionada, setCuentaSeleccionada] = useState<cuenta>(
     listCuentas.length > 0 ? listCuentas[0] : ({} as cuenta)
   );
@@ -159,20 +163,87 @@ const [errorSnackbarMessage, setErrorSnackbarMessage] = useState("");
   const [infoDebitoMesSiguiente, setInfoDebitoMesSiguiente] = useState(false);
   const [usuarioTocoDiaDebito, setUsuarioTocoDiaDebito] = useState(false);
 
+  const isCuentaAhorro = formData.metodoPago === "CUENTA_AHORRO";
+
 const showError = (message: string) => {
   setErrorSnackbarMessage(message);
   setErrorSnackbarOpen(true);
 };
+
+  const parseMonto = (monto: string): number => {
+    const montoNormalizado = monto.replace(/,/g, "").trim();
+    const valor = Number(montoNormalizado);
+    return Number.isFinite(valor) ? valor : 0;
+  };
+
+  const valoresActualesSeguro = {
+    prima: cuentaSeleccionada.prima,
+    sumaAsegurada: cuentaSeleccionada.suma_asegurada,
+  };
+  const hayNuevoMonto = formData.monto.trim() !== "";
+  const aporteParaTotal = hayNuevoMonto
+    ? parseMonto(formData.monto)
+    : cuentaSeleccionada.tiene_seguro
+      ? cuentaSeleccionada.suma_asegurada / 300
+      : cuentaSeleccionada.aporte;
+  const valoresSeguro = !hayNuevoMonto && cuentaSeleccionada.tipo_seguro === 2
+    ? valoresActualesSeguro
+    : calculateInsuranceValues({
+        tieneSeguro: cuentaSeleccionada.tiene_seguro,
+        tipoSeguro: cuentaSeleccionada.tipo_seguro,
+        aporte: hayNuevoMonto ? parseMonto(formData.monto) : cuentaSeleccionada.aporte,
+        valoresActuales: valoresActualesSeguro,
+        moneda: cuentaSeleccionada.moneda,
+      });
+  const totalAporte = hayNuevoMonto
+    ? aporteParaTotal + valoresSeguro.prima
+    : aporteParaTotal;
+
+  const handleMontoChange = (event: {
+    target: { name: string; value: string };
+  }) => {
+    const monto = event.target.value;
+    setMontoError(null);
+
+    if (!setFormData) return;
+
+    setFormData((prev) => {
+      const valores = calculateInsuranceValues({
+        tieneSeguro: cuentaSeleccionada.tiene_seguro,
+        tipoSeguro: cuentaSeleccionada.tipo_seguro,
+        aporte: parseMonto(monto),
+        valoresActuales: {
+          prima: cuentaSeleccionada.prima,
+          sumaAsegurada: cuentaSeleccionada.suma_asegurada,
+        },
+        moneda: cuentaSeleccionada.moneda,
+      });
+
+      return { ...prev, monto, ...valores };
+    });
+  };
   const { rawData, loadingData } = useExtractRawData({
     cuenta: cuentaSeleccionada.cuenta,
+    monedaCuenta: cuentaSeleccionada.moneda,
     trigger: reloadTrigger,
     enabled: isValid === true && !!cuentaSeleccionada.cuenta,
   });
+  const {
+    cuentasAhorro,
+    loadingCuentasAhorro,
+    errorCuentasAhorro,
+  } = useCuentasAhorro({
+    cuenta: cuentaSeleccionada.cuenta,
+    monedaCuenta: cuentaSeleccionada.moneda,
+    enabled: isValid === true && !!cuentaSeleccionada.cuenta,
+  });
+  const mostrarCuentaAhorro =
+    !loadingCuentasAhorro && cuentasAhorro.length > 0;
   const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
   const confirmAddCard = async () => {
 
-    const monto = parseFloat(formData.monto);
+    const monto = parseMonto(formData.monto);
     if (isNaN(monto) || monto < 0) {
   setMontoError("No se permiten montos negativos o vacíos");
   showError("No se permiten montos negativos o vacíos");
@@ -180,29 +251,49 @@ const showError = (message: string) => {
 }
 
   // Usar la moneda de la cuenta seleccionada para la validación
-  const moneda = cuentaSeleccionada.moneda || formData.monedaDebito;
+  const moneda = normalizeCurrency(
+    cuentaSeleccionada.moneda,
+    formData.monedaDebito
+  );
+  const montoMinimo = getCurrencyMinimum(moneda);
+
+  if (!moneda || montoMinimo === null) {
+    const msg = "No se pudo determinar la moneda de la cuenta seleccionada";
+    setMontoError(msg);
+    showError(msg);
+    return;
+  }
 
   
-if (
-  (moneda === 'LEMPIRAS' && monto < 250) ||
-  ((moneda === 'DOLARES' || moneda === 'DÓLARES') && monto < 20)
-) {
-  const msg = moneda === 'LEMPIRAS'
-    ? 'El monto mínimo para Lempiras es L 250'
-    : 'El monto mínimo para Dólares es $ 20';
+if (monto < montoMinimo) {
+  const msg = getCurrencyMinimumMessage(moneda);
   setMontoError(msg);
   showError(msg);
   return;
 }
 
+  if (
+    cuentaSeleccionada.tiene_seguro &&
+    cuentaSeleccionada.tipo_seguro === 3 &&
+    monto <= cuentaSeleccionada.prima
+  ) {
+    const msg = "Para este plan, el aporte debe ser mayor que la prima vigente.";
+    setMontoError(msg);
+    showError(msg);
+    return;
+  }
+
   setMontoError(null); 
-  const [mes, anio] = formData.expiryDate.split("/");
+    const [mes, anio] = formData.expiryDate.split("/");
+    const montoARegistrar = cuentaSeleccionada.tiene_seguro
+      ? totalAporte.toFixed(2)
+      : formData.monto;
     const cardData: ClienteData = {
       Tarjeta: formData.cardnumber,
       Aporte: formData.aporte,
-      Monto: formData.monto,
+      Monto: montoARegistrar,
       Contrato: cuentaSeleccionada.contrato,
-      MonedaCCI: cuentaSeleccionada.moneda,
+      MonedaCCI: moneda,
       DiaDebito: formData.diaDebito,
       Identidad: id || "",
       CCI: cuentaSeleccionada.cuenta,
@@ -212,8 +303,8 @@ if (
       Vencimiento: `${mes}20${anio}`,
       TipoDebito: "TC",
       Modalidad: cuentaSeleccionada.modalidad,
-      MonedaDebito:cuentaSeleccionada.moneda,
-      Canal: isOVP ? "OVP" : "WEB",
+      MonedaDebito: moneda,
+      Canal: "PRUEBAS",
     };
    if (!isExpiryDateValid(formData.expiryDate)) {
   const msg = 'Fecha inválida o vencida';
@@ -243,9 +334,20 @@ const encrypted = await encryptWithPublicKey({
         Vencimiento: '',
               EncryptedPayload: encrypted, 
             }; 
-            
 
-    await InfoInsert1.InsertInfo(cardToSend);
+    try {
+      await InfoInsert1.InsertInfo(cardToSend);
+    } catch (error) {
+      setShowLoader(false);
+
+      if (isSessionExpiredError(error)) {
+        notifySessionExpired();
+        return;
+      }
+
+      showError("No pudimos registrar la tarjeta en este momento. Intenta nuevamente.");
+      return;
+    }
     setShowCardForm(false);
     
     setReloadTrigger((prev) => !prev);
@@ -274,17 +376,111 @@ setMontoError(null);
       });
     }, 0);
   };
+
+  const confirmAddSavingsAccount = async () => {
+    if (!formData.cuentaAhorro) {
+      showError("Selecciona la cuenta de ahorro para el débito.");
+      return;
+    }
+
+    const moneda = normalizeCurrency(
+      cuentaSeleccionada.moneda,
+      formData.monedaDebito
+    );
+
+    const monto = parseMonto(formData.monto);
+    if (isNaN(monto) || monto < 0) {
+      const mensaje = "No se permiten montos negativos o vacíos";
+      setMontoError(mensaje);
+      showError(mensaje);
+      return;
+    }
+
+    if (!moneda) {
+      showError("No se pudo determinar la moneda de la cuenta seleccionada.");
+      return;
+    }
+
+    const montoMinimo = getCurrencyMinimum(moneda);
+    if (montoMinimo === null || monto < montoMinimo) {
+      const mensaje = montoMinimo === null
+        ? "No se pudo determinar la moneda de la cuenta seleccionada"
+        : getCurrencyMinimumMessage(moneda);
+      setMontoError(mensaje);
+      showError(mensaje);
+      return;
+    }
+
+    if (
+      cuentaSeleccionada.tiene_seguro &&
+      cuentaSeleccionada.tipo_seguro === 3 &&
+      monto <= cuentaSeleccionada.prima
+    ) {
+      const mensaje = "Para este plan, el aporte debe ser mayor que la prima vigente.";
+      setMontoError(mensaje);
+      showError(mensaje);
+      return;
+    }
+
+    setMontoError(null);
+
+    const montoARegistrar = cuentaSeleccionada.tiene_seguro
+      ? totalAporte.toFixed(2)
+      : formData.monto;
+
+    const savingsData: ClienteData = {
+      Tarjeta: formData.cuentaAhorro,
+      Aporte: formData.aporte,
+      Monto: montoARegistrar,
+      Contrato: cuentaSeleccionada.contrato,
+      MonedaCCI: moneda,
+      DiaDebito: formData.diaDebito,
+      Identidad: id || "",
+      CCI: cuentaSeleccionada.cuenta,
+      Email: cliente?.Correo ?? "",
+      NombreCliente: cliente?.Nombre ?? "",
+      Banco: "",
+      Vencimiento: "",
+      TipoDebito: "CA",
+      Modalidad: cuentaSeleccionada.modalidad,
+      MonedaDebito: moneda,
+      Canal: "PRUEBAS",
+    };
+
+    setShowLoader(true);
+    try {
+      await InfoInsert1.InsertInfo(savingsData);
+    } catch (error) {
+      setShowLoader(false);
+      if (isSessionExpiredError(error)) {
+        notifySessionExpired();
+        return;
+      }
+      showError("No pudimos registrar la cuenta de ahorro en este momento. Intenta nuevamente.");
+      return;
+    }
+
+    setShowCardForm(false);
+    setReloadTrigger((prev) => !prev);
+    setSnackbarMessage("¡Cuenta de ahorro registrada con éxito!");
+    setSnackbarOpen(true);
+    const cuentaActual = formData.cuenta;
+    setFormData?.({ ...initialFormData, cuenta: cuentaActual });
+    setShowLoader(false);
+  };
 const handleVeriffStarted = () => {
   setVeriffStarted(true);
   
 };
   const handleEdit = (row: any) => {
-    
+    const monedaCuenta = normalizeCurrency(cuentaSeleccionada.moneda);
+
     openDialog({
       ...row,
       Contrato: cuentaSeleccionada.contrato,
       Modalidad: cuentaSeleccionada.modalidad,
-      MonedaCCI: cuentaSeleccionada.moneda,
+      MonedaCCI: monedaCuenta,
+      MonedaDebito: monedaCuenta,
       CCI: cuentaSeleccionada.cuenta,
       Email: cliente?.Correo ?? "",
       NombreCliente: cliente?.Nombre ?? "",
@@ -308,8 +504,6 @@ const handleVeriffStarted = () => {
     if (setFormData) {
       setFormData((prev) => ({
         ...prev,
-        prima: planSeleccionado.prima,
-        sumaAsegurada: planSeleccionado.sumaAsegurada,
         cuenta: cuentaSeleccionada.cuenta,
         moneda: cuentaSeleccionada.moneda,
        
@@ -317,7 +511,28 @@ const handleVeriffStarted = () => {
         modalidad:cuentaSeleccionada.modalidad
       }));
     }
-  }, [cuentaSeleccionada]);
+  }, [cuentaSeleccionada, setFormData]);
+
+  useEffect(() => {
+    if (!setFormData) return;
+
+    setFormData((prev) => {
+      if (
+        valoresSeguro.prima === prev.prima &&
+        valoresSeguro.sumaAsegurada === prev.sumaAsegurada
+      ) {
+        return prev;
+      }
+
+      return { ...prev, ...valoresSeguro };
+    });
+  }, [
+    cuentaSeleccionada.tiene_seguro,
+    cuentaSeleccionada.tipo_seguro,
+    cuentaSeleccionada.aporte,
+    formData.monto,
+    setFormData,
+  ]);
 
   useEffect(() => {
     if (cliente && setFormData) {
@@ -337,10 +552,10 @@ const handleVeriffStarted = () => {
 
   // Si la sesión Veriff ya fue validada (cookie), no mostrar el botón y mostrar los datos al refrescar
   useEffect(() => {
-    if (isOVP === true && Cookies.get("veriffStatus") === "approved") {
+    if (isLink === true && Cookies.get("veriffStatus") === "approved") {
       setVeriffApproved(true);
     }
-  }, [isOVP]);
+  }, [isLink]);
   useEffect(() => {
   if (rawData.length === 0) {
     setShowCardForm(true);
@@ -348,25 +563,59 @@ const handleVeriffStarted = () => {
     setShowCardForm(false);
   }
 }, [rawData]);
+
+  useEffect(() => {
+    if (
+      !loadingCuentasAhorro &&
+      cuentasAhorro.length === 0 &&
+      formData.metodoPago === "CUENTA_AHORRO"
+    ) {
+      setFormData?.((prev) => ({
+        ...prev,
+        metodoPago: "TARJETA",
+        cuentaAhorro: "",
+      }));
+    }
+  }, [cuentasAhorro.length, formData.metodoPago, loadingCuentasAhorro, setFormData]);
 useEffect(() => {
   setShowLoader(loadingData);
 }, [loadingData]);
 
-  const handleAddCard = () => setShowCardForm(true);
+  const handleAddCard = () => {
+    setFormData?.((prev) => ({
+      ...prev,
+      metodoPago: "TARJETA",
+      cuentaAhorro: "",
+    }));
+    setShowCardForm(true);
+  };
+
+  const handleMetodoPagoChange = (event: any) => {
+    const metodoPago = event.target.value as "TARJETA" | "CUENTA_AHORRO";
+    setFormData?.((prev) => ({
+      ...prev,
+      metodoPago,
+      cuentaAhorro: metodoPago === "TARJETA" ? "" : prev.cuentaAhorro,
+    }));
+    setCardErrors({});
+    setMontoError(null);
+    setShowCardForm(metodoPago === "CUENTA_AHORRO" || rawData.length === 0);
+  };
 
  
   const maskCardNumber = (cardNumber: string) => `•••• •••• •••• ${cardNumber.slice(-4)}`;
 
   
   const handleDelete = (row: any) => {
-  
+    const monedaCuenta = normalizeCurrency(cuentaSeleccionada.moneda);
+
     const cardData: ClienteDataUpdate = {
       ID: String(row.ID ?? ""),
       Tarjeta: row.Tarjeta,
       Aporte: formData.aporte || row.TipoDebito,
       Monto: String(row.Monto),
       Contrato: cuentaSeleccionada.contrato,
-      MonedaCCI: cuentaSeleccionada.moneda,
+      MonedaCCI: monedaCuenta,
       DiaDebito: row.DiaDebito,
       Identidad: id ?? "",
       CCI: cuentaSeleccionada.cuenta,
@@ -376,9 +625,9 @@ useEffect(() => {
       Vencimiento: row.FechaVencimiento,
       TipoDebito: "TC",
       Modalidad: cuentaSeleccionada.modalidad || "",
-      MonedaDebito:row.MonedaDebito || formData.monedaDebito,
+      MonedaDebito: monedaCuenta,
       Estado: "I",
-      Canal: isOVP ? "OVP" : "WEB",
+      Canal: "PRUEBAS",
 
     };
  
@@ -390,38 +639,42 @@ useEffect(() => {
       confirmColor: "error",
       onConfirm: async () => {
         setShowLoader(true);
-        const encrypted = await encryptWithPublicKey({
-              Tarjeta: cardData.Tarjeta,
-              Vencimiento: cardData.Vencimiento
-            });
- 
-            const cardToSend = {
-              ...cardData,
-                Tarjeta: '',
-        Vencimiento: '',
-              EncryptedPayload: encrypted, 
-            }; 
-
-           
-            
-        await deleteCard(cardToSend);
-      
-        setReloadTrigger((prev) => !prev);
-        setShowLoader(false);
-        setSnackbarMessage("¡Tarjeta eliminada con éxito!");
-        setSnackbarOpen(true);
-
-        // Abrir después de que el hook cierre el modal "¿Estás seguro de eliminar?"
-        setTimeout(() => {
-          showConfirm({
-            title: "Gestión Completada con Éxito",
-            message: "¿Deseas realizar otra operación?",
-            confirmButtonText: "Sí",
-            cancelButtonText: "No",
-            onConfirm: () => setShowCardForm(true),
-            onCancel: clearSessionCookies,
+        try {
+          const encrypted = await encryptWithPublicKey({
+            Tarjeta: cardData.Tarjeta,
+            Vencimiento: cardData.Vencimiento,
           });
-        }, 0);
+          const cardToSend = {
+            ...cardData,
+            Tarjeta: '',
+            Vencimiento: '',
+            EncryptedPayload: encrypted,
+          };
+
+          await deleteCard(cardToSend);
+          setReloadTrigger((prev) => !prev);
+          setSnackbarMessage("¡Tarjeta eliminada con éxito!");
+          setSnackbarOpen(true);
+
+          setTimeout(() => {
+            showConfirm({
+              title: "Gestión Completada con Éxito",
+              message: "¿Deseas realizar otra operación?",
+              confirmButtonText: "Sí",
+              cancelButtonText: "No",
+              onConfirm: () => setShowCardForm(true),
+              onCancel: clearSessionCookies,
+            });
+          }, 0);
+        } catch (error) {
+          if (isSessionExpiredError(error)) {
+            notifySessionExpired();
+            return;
+          }
+          showError("No se pudo eliminar el método de pago. Intenta nuevamente.");
+        } finally {
+          setShowLoader(false);
+        }
       }
     });
   };
@@ -463,7 +716,9 @@ useEffect(() => {
       flex: 1,
       minWidth: 150,
       valueGetter: (params) => {
-    const simbolo = params.row.MonedaDebito === 'LEMPIRAS' ? 'L' : '$';
+    const simbolo = getCurrencyPrefix(
+      params.row.MonedaDebito || cuentaSeleccionada.moneda
+    ).trim();
     const monto = Number(params.row.Monto) || 0;
     return `${simbolo} ${monto.toLocaleString('en-US', {
       minimumFractionDigits: 2,
@@ -531,7 +786,7 @@ useEffect(() => {
      
     {showLoader && <FullscreenLoader message="Procesando..." />}
     <form>
-      {isOVP && (
+      {isLink && (
         <Grid container mt={5} mb={5}>
           <Grid item xs={12}>
             {(!veriffApproved || veriffError) && (
@@ -554,7 +809,7 @@ useEffect(() => {
         </Grid>
       )}
 
-      {isOVP !== null && (!isOVP || (isOVP && veriffApproved))  && (
+      {isLink !== null && (!isLink || (isLink && veriffApproved))  && (
         <Grid container spacing={2} rowSpacing={4} top={4} mb={5}>
           <Grid item xs={12}>
             <FormControl variant="outlined" fullWidth>
@@ -586,7 +841,98 @@ useEffect(() => {
             </FormControl>
           </Grid>
 
-        <Grid item xs={12} sm={12}>
+          {cuentaSeleccionada.tiene_seguro && (
+            <Grid item xs={12}>
+              <Box
+                sx={{
+                  border: "1px solid",
+                  borderColor: "divider",
+                  borderRadius: 2,
+                  p: 2,
+                }}
+              >
+                <Typography variant="subtitle1" color="primary" sx={{ mb: 2 }}>
+                  Seguro
+                </Typography>
+                <Grid container spacing={2}>
+                  <Grid item xs={12} sm={4}>
+                    <TextField
+                      fullWidth
+                      label="Suma asegurada"
+                      value={valoresSeguro.sumaAsegurada.toLocaleString("en-US", {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}
+                      InputProps={{
+                        readOnly: true,
+                        startAdornment: (
+                          <InputAdornment position="start">
+                            {getCurrencyPrefix(cuentaSeleccionada.moneda).trim()}
+                          </InputAdornment>
+                        ),
+                      }}
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={4}>
+                    <TextField
+                      fullWidth
+                      label="Prima"
+                      value={valoresSeguro.prima.toLocaleString("en-US", {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}
+                      InputProps={{
+                        readOnly: true,
+                        startAdornment: (
+                          <InputAdornment position="start">
+                            {getCurrencyPrefix(cuentaSeleccionada.moneda).trim()}
+                          </InputAdornment>
+                        ),
+                      }}
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={4}>
+                    <TextField
+                      fullWidth
+                      label="Total de aporte"
+                      value={totalAporte.toLocaleString("en-US", {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}
+                      InputProps={{
+                        readOnly: true,
+                        startAdornment: (
+                          <InputAdornment position="start">
+                            {getCurrencyPrefix(cuentaSeleccionada.moneda).trim()}
+                          </InputAdornment>
+                        ),
+                      }}
+                    />
+                  </Grid>
+                </Grid>
+              </Box>
+            </Grid>
+          )}
+
+          <Grid item xs={12}>
+            <FormControl fullWidth>
+              <InputLabel id="metodo-pago-label">Método de pago</InputLabel>
+              <Select
+                labelId="metodo-pago-label"
+                label="Método de pago"
+                name="metodoPago"
+                value={formData.metodoPago}
+                onChange={handleMetodoPagoChange}
+              >
+                <MenuItem value="TARJETA">Tarjeta de crédito o débito</MenuItem>
+                {mostrarCuentaAhorro && (
+                  <MenuItem value="CUENTA_AHORRO">Cuenta de ahorro</MenuItem>
+                )}
+              </Select>
+            </FormControl>
+          </Grid>
+
+          <Grid item xs={12} sm={12}>
   <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
     <Typography variant="h6" color="primary">
       Tus métodos de pago:
@@ -616,11 +962,72 @@ useEffect(() => {
     />
   )}
 </Grid>
-         
+
           {showCardForm && (
             <>
-            
+            {isCuentaAhorro ? (
+              <>
+              <Grid item xs={12}>
+                <FormControl fullWidth required>
+                  <InputLabel id="cuenta-ahorro-label">Cuenta de ahorro</InputLabel>
+                  <Select
+                    labelId="cuenta-ahorro-label"
+                    label="Cuenta de ahorro"
+                    name="cuentaAhorro"
+                    value={formData.cuentaAhorro}
+                    onChange={handleSelectChange}
+                    startAdornment={
+                      <InputAdornment position="start">
+                        <AccountBalanceIcon />
+                      </InputAdornment>
+                    }
+                  >
+                    {loadingCuentasAhorro && (
+                      <MenuItem value="" disabled>Cargando cuentas de ahorro...</MenuItem>
+                    )}
+                    {!loadingCuentasAhorro && errorCuentasAhorro && (
+                      <MenuItem value="" disabled>{errorCuentasAhorro}</MenuItem>
+                    )}
+                    {!loadingCuentasAhorro && !errorCuentasAhorro && cuentasAhorro.length === 0 && (
+                      <MenuItem value="" disabled>No hay cuentas de ahorro disponibles.</MenuItem>
+                    )}
+                    {cuentasAhorro.map((cuenta) => (
+                      <MenuItem value={cuenta.cuenta} key={cuenta.cuenta}>
+                        {[cuenta.cuenta, cuenta.moneda, cuenta.descripcion]
+                          .filter(Boolean)
+                          .join(" - ")}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
               <Grid item xs={12} sm={4}>
+                <FormControl fullWidth>
+                  <TextField
+                    id="monto"
+                    name="monto"
+                    label="Monto del Aporte"
+                    variant="outlined"
+                    value={formData.monto}
+                    onChange={handleMontoChange}
+                    fullWidth
+                    required
+                    error={!!montoError}
+                    helperText={montoError}
+                    InputLabelProps={{ shrink: true }}
+                    InputProps={{
+                      inputComponent: CurrencyFormatCustom as any,
+                    }}
+                    inputProps={{
+                      prefix: getCurrencyPrefix(cuentaSeleccionada.moneda || formData.monedaDebito),
+                    }}
+                  />
+                </FormControl>
+              </Grid>
+              </>
+            ) : (
+              <>
+                <Grid item xs={12} sm={4}>
                <CardNumberMaskedField
   name="cardnumber"
   value={formData.cardnumber}
@@ -640,7 +1047,7 @@ useEffect(() => {
   helperText={cardErrors.expiryDate}
 />
 
-              </Grid>
+                </Grid>
               <Grid item xs={12} sm={4}>
                 <FormControl fullWidth>
                   <InputLabel>Banco Emisor</InputLabel>
@@ -671,7 +1078,7 @@ useEffect(() => {
       label="Monto del Aporte"
       variant="outlined"
       value={formData.monto}
-      onChange={handleInputChange}
+      onChange={handleMontoChange}
       fullWidth
       required
       error={!!montoError}
@@ -685,7 +1092,9 @@ useEffect(() => {
       }}
     />
   </FormControl>
-</Grid>
+                </Grid>
+              </>
+            )}
 <Grid item xs={12} sm={4}>
     <FormControl fullWidth>
       <InputLabel>Tipo de Aporte</InputLabel>
@@ -739,7 +1148,9 @@ useEffect(() => {
                       message: "¿Deseas registrar?",
                       confirmButtonText: "Registrar",
                       confirmColor: "success",
-                      onConfirm: confirmAddCard,
+                      onConfirm: isCuentaAhorro
+                        ? confirmAddSavingsAccount
+                        : confirmAddCard,
                     })
                   }
                 >
@@ -815,4 +1226,3 @@ useEffect(() => {
 };
 
 export default Form1;
-

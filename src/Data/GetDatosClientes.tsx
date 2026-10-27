@@ -101,6 +101,25 @@ export const instanceLogout1 = axios.create({
   withCredentials: true,
 });
 
+const formsApiBaseUrl = (
+  process.env.REACT_APP_API_WHOOK ||
+  process.env.REACT_APP_API_TOKEN?.replace(/\/token\/?$/, "") ||
+  ""
+).replace(/\/+$/, "");
+
+const cuentasAhorroApiUrl =
+  process.env.REACT_APP_API_CTADB || `${formsApiBaseUrl}/ctadb`;
+
+export const instanceCuentasAhorro1 = axios.create({
+  baseURL: cuentasAhorroApiUrl,
+  withCredentials: true,
+});
+
+export const instanceRequestForm1 = axios.create({
+  baseURL: formsApiBaseUrl,
+  withCredentials: true,
+});
+
 export const logoutToken1 = {
   logout: function () {
     return instanceLogout1.post('', {}, {
@@ -153,6 +172,21 @@ export const InfoProductos1 = {
   },
 };
 
+export const InfoCuentasAhorro1 = {
+  obtieneInfo() {
+    return instanceCuentasAhorro1.get('', {
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': process.env.REACT_APP_API_SECRET_KEY ?? '',
+        ...(process.env.REACT_APP_AUTHORIZATION_AFP
+          ? { AuthorizationAFP: process.env.REACT_APP_AUTHORIZATION_AFP }
+          : {}),
+      },
+      withCredentials: true,
+    });
+  },
+};
+
 export const InfoActualiza1 = {
   UpdateInfo: function (data: ClienteDataUpdate) {
     
@@ -193,7 +227,7 @@ export const InfoInsertaVeriff1 = {
 
 export const InfoConsulta1 = {
   InfoConsulta: function (cuenta: string) {
-    const cta = { cuenta: cuenta,canal: "OVP" };
+    const cta = { cuenta: cuenta,canal: "Link" };
    
     return instanceConsulta1.post('', cta, {
       headers: {
@@ -220,6 +254,17 @@ export const InfoCodeExchange = {
   },
 };
 
+export const requestForm1 = {
+  request: function () {
+    return instanceRequestForm1.post('/hubspot/request-form', {}, {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      withCredentials: true,
+    });
+  },
+};
+
 
 export const validateSession1 = {
   obtieneSession: function (session: string) {
@@ -235,6 +280,3 @@ export const validateSession1 = {
     });
   },
 };
-
-
-

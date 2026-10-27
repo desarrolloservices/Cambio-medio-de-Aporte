@@ -1,7 +1,6 @@
 import React from "react";
 import { TextField, InputAdornment } from "@mui/material";
 import CreditCardIcon from "@mui/icons-material/CreditCard";
-import { IMaskInput } from "react-imask";
 
 interface CustomProps {
   name: string;
@@ -12,27 +11,11 @@ interface CustomProps {
     onFocus?: () => void;
 }
 
-const CardMaskCustom = React.forwardRef<HTMLInputElement, any>(
-  function CardMaskCustom(props, ref) {
-    const { onChange, ...other } = props;
-    return (
-      <IMaskInput
-        {...other}
-        mask="0000 0000 0000 0000[ 000]" 
-        overwrite
-        inputRef={ref}
-        onAccept={(value: any) =>
-          onChange({
-            target: {
-              name: props.name,
-              value: value.replace(/\s/g, ""), 
-            },
-          } as React.ChangeEvent<HTMLInputElement>)
-        }
-      />
-    );
-  }
-);
+const normalizeCardNumber = (value: string): string =>
+  String(value ?? "").replace(/\D/g, "").slice(0, 19);
+
+const formatCardNumber = (value: string): string =>
+  normalizeCardNumber(value).replace(/(.{4})/g, "$1 ").trim();
 
 const CardNumberMaskedField: React.FC<CustomProps> = ({
   name,
@@ -45,17 +28,25 @@ const CardNumberMaskedField: React.FC<CustomProps> = ({
     <TextField
       label="Número de la Tarjeta"
       name={name}
-      value={value}
-      onChange={onChange}
+      value={formatCardNumber(value)}
+      onChange={(event) => {
+        onChange({
+          target: {
+            name,
+            value: normalizeCardNumber(event.target.value),
+          },
+        } as React.ChangeEvent<HTMLInputElement>);
+      }}
       fullWidth
       variant="outlined"
       error={error}
       helperText={helperText}
       inputProps={{
         inputMode: "numeric",
+        maxLength: 23,
+        autoComplete: "cc-number",
       }}
       InputProps={{
-        inputComponent: CardMaskCustom as any,
         startAdornment: (
           <InputAdornment position="start">
             <CreditCardIcon />

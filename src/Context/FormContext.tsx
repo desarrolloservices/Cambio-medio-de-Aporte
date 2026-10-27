@@ -12,6 +12,8 @@ export interface FormData {
   tipoIdentificacion: string;
   numeroIdentificacion: string;
   cardnumber: string;
+  metodoPago: "TARJETA" | "CUENTA_AHORRO";
+  cuentaAhorro: string;
   formaPago: string;
   diaDebito: string;
   expiryDate: string;
@@ -69,7 +71,7 @@ const FormProvider: React.FC<{ children: React.ReactNode }> = ({
 }) => {
   const [loading, setLoading] = useState(false);
   const [activeStep, setActiveStep] = useState(0);
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<FormData>({
     aporte: "",
     aporte_nuevo:"",
     primerNombre: "",
@@ -79,6 +81,8 @@ const FormProvider: React.FC<{ children: React.ReactNode }> = ({
     tipoIdentificacion: "",
     numeroIdentificacion: "",
     cardnumber: "",
+    metodoPago: "TARJETA" as const,
+    cuentaAhorro: "",
     formaPago: "Carné",
     diaDebito: getLastDayOfMonth(),
     expiryDate: "", 
@@ -176,6 +180,8 @@ export const initialFormData: FormData = {
   tipoIdentificacion: "",
   numeroIdentificacion: "",
   cardnumber: "",
+  metodoPago: "TARJETA",
+  cuentaAhorro: "",
   formaPago: "Carné",
   diaDebito: getLastDayOfMonth(),
   expiryDate: "",

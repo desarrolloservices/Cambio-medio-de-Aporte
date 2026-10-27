@@ -56,7 +56,7 @@ const ExpiryDateMaskedField: React.FC<CustomProps> = ({
   value,
   onChange,
   label = "Fecha de Expiración",
-  placeholder = "MM/YY",
+  placeholder = "Mes/Año",
   error = false,
   helperText = "",
 }) => {

@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { InfoCliente1, InfoCodeExchange } from '../Data/GetDatosClientes';
+import { InfoCliente1 } from '../Data/GetDatosClientes';
 import type { informacionCliente } from '../Interfaces/Tipos';
 import axios from 'axios';
+import { exchangeCodeOnce } from '../Utils/codeExchange';
 
 type Options = { enabled?: boolean };
 
@@ -67,25 +68,17 @@ const useCliente = ({ enabled = true }: Options = {}) => {
       }
 
       if (!ok && code) {
-        const key = `exchanged:${code}`;
-        const stored = typeof window !== 'undefined' ? sessionStorage.getItem(key) : null;
-
-        if (!stored) {
-          try {
-            const ex = await InfoCodeExchange.InfoCode(code);
-            if (ex.status >= 200 && ex.status < 300) {
-              if (typeof window !== 'undefined') {
-                sessionStorage.setItem(key, '1');
-                const url = new URL(window.location.href);
-                url.searchParams.delete('code');
-                url.searchParams.delete('id');
-                window.history.replaceState({}, '', url.toString());
-              }
-              ok = await fetchCliente();
-            }
-          } catch {
-            // ignore exchange errors; fetch fallback handles messaging
+        try {
+          await exchangeCodeOnce(code);
+          if (typeof window !== 'undefined') {
+            const url = new URL(window.location.href);
+            url.searchParams.delete('code');
+            url.searchParams.delete('id');
+            window.history.replaceState({}, '', url.toString());
           }
+          ok = await fetchCliente();
+        } catch {
+          // ignore exchange errors; fetch fallback handles messaging
         }
       }
 

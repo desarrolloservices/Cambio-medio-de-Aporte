@@ -1,23 +1,44 @@
 // Hooks/UseValidateTk.ts
 import { useState, useEffect, useRef } from 'react';
-import { InfoCodeExchange, validateToken1 } from '../Data/GetDatosClientes';
+import { validateToken1 } from '../Data/GetDatosClientes';
+import { exchangeCodeOnce } from '../Utils/codeExchange';
+import {
+  getApiErrorDetails,
+  SESSION_EXPIRED_CODE,
+  SESSION_EXPIRED_EVENT,
+} from '../Utils/sessionExpired';
 
 interface TokenValidationResult {
   isValid: boolean | null;
-  isOVP: boolean | null;
+  isLink: boolean | null;
   id: string | null;
   ready: boolean;            // ← NUEVO
+  sessionExpired: boolean;
 }
 
 const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
 
 const useValidateToken = (): TokenValidationResult => {
   const [isValid, setIsValid] = useState<boolean | null>(null);
-  const [isOVP, setIsOVP] = useState<boolean | null>(null);
+  const [isLink, setIsLink] = useState<boolean | null>(null);
   const [id, setId] = useState<string | null>(null);
   const [ready, setReady] = useState(false);
+  const [sessionExpired, setSessionExpired] = useState(false);
 
   const ran = useRef(false); // evita doble ejecución en dev
+
+  useEffect(() => {
+    const handleSessionExpired = () => {
+      setSessionExpired(true);
+      setIsValid(false);
+      setIsLink(false);
+      setId(null);
+      setReady(true);
+    };
+
+    window.addEventListener(SESSION_EXPIRED_EVENT, handleSessionExpired);
+    return () => window.removeEventListener(SESSION_EXPIRED_EVENT, handleSessionExpired);
+  }, []);
 
   useEffect(() => {
     if (ran.current) return;
@@ -37,8 +58,9 @@ const useValidateToken = (): TokenValidationResult => {
           const r = await validateToken1.getToken();
           const ok = r.status === 200 && r.data?.codigoMensaje === '001';
           return { ok, data: r.data };
-        } catch {
-          return { ok: false, data: null };
+        } catch (error) {
+          const { status, code } = getApiErrorDetails(error);
+          return { ok: false, data: null, status, code };
         }
       };
 
@@ -47,36 +69,20 @@ const useValidateToken = (): TokenValidationResult => {
 
       // 2) Si no hay sesión y hay code, canjea SOLO una vez (guardado global)
       if (!v.ok && code) {
-        const key = `exchanged:${code}`;
-        const already = typeof window !== 'undefined' && localStorage.getItem(key);
+        try {
+          await exchangeCodeOnce(code);
 
-        if (!already) {
-          // Marca YA para evitar doble-canje en hooks concurrentes
-          try {
-            localStorage.setItem(key, '1');
-          } catch {}
-
-          try {
-            // canjea (no lances excepción si responde 401 al segundo intento)
-            const ex = await InfoCodeExchange.InfoCode(code);
-            // limpia query para no reintentar
-            if (typeof window !== 'undefined') {
-              const url = new URL(window.location.href);
-              url.searchParams.delete('code');
-              url.searchParams.delete('id');
-              window.history.replaceState({}, '', url.toString());
-            }
-            // pequeño delay: deja que el navegador persista cookie HttpOnly
-            await sleep(120);
-            // revalida
-            v = await validate();
-          } catch {
-            // aunque falle, intenta validar por si la cookie ya existía
-            await sleep(120);
-            v = await validate();
+          if (typeof window !== 'undefined') {
+            const url = new URL(window.location.href);
+            url.searchParams.delete('code');
+            url.searchParams.delete('id');
+            window.history.replaceState({}, '', url.toString());
           }
-        } else {
-          // Ya marcado: probablemente otra parte lo canjeó; revalida tras pequeño delay
+
+          await sleep(120);
+          v = await validate();
+        } catch {
+          // Aunque falle, revalida por si el servidor alcanzó a crear la cookie.
           await sleep(120);
           v = await validate();
         }
@@ -84,13 +90,16 @@ const useValidateToken = (): TokenValidationResult => {
 
       // 3) Actualiza estado final
       if (v.ok && v.data) {
+        setSessionExpired(false);
         setIsValid(true);
-        setIsOVP(v.data.canal === 'OVP'|| v.data.canal === '0');
-      //setIsOVP(false);
+        setIsLink(v.data.canal === 'Link' || v.data.canal === '0');
         setId(v.data.identidad ?? null);
       } else {
+        setSessionExpired(
+          v.status === 401 && v.code === SESSION_EXPIRED_CODE
+        );
         setIsValid(false);
-        setIsOVP(false);
+        setIsLink(false);
         setId(null);
       }
 
@@ -100,7 +109,7 @@ const useValidateToken = (): TokenValidationResult => {
     run();
   }, []);
 
-  return { isValid, isOVP, id, ready };
+  return { isValid, isLink, id, ready, sessionExpired };
 };
 
 export default useValidateToken;

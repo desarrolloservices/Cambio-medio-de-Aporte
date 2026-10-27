@@ -50,7 +50,24 @@ export function useCardValidator() {
       return errors;
     }
 
+    if (cleanNumber.length >= 13 && cleanNumber[0] === "0") {
+      errors.cardNumber = "Número de tarjeta inválido";
+      return errors;
+    }
+
+    if (cleanNumber.length >= 13 && /^(.)\1+$/.test(cleanNumber)) {
+      errors.cardNumber = "Número de tarjeta inválido";
+      return errors;
+    }
+
     const cardType = getCardType(cleanNumber);
+
+    // Bloquear explícitamente tarjetas American Express
+    if (cardType === "amex") {
+      errors.cardNumber = "Únicamente se permiten tarjetas Visa y MasterCard";
+      return errors;
+    }
+
     const maxLength = getMaxLength(cardType);
 
     if (cleanNumber.length < 13) {
