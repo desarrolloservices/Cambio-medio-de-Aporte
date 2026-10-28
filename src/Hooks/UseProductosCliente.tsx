@@ -3,8 +3,14 @@ import { useEffect, useState } from "react";
 import { InfoProductos1 } from "../Data/GetDatosClientes";
 import type { cuenta } from "../Interfaces/Tipos";
 import axios from "axios";
+import { normalizeCurrency } from "../Utils/currency";
 
 type Options = { enabled?: boolean };
+
+const toNumberOrZero = (value: unknown): number => {
+  const numberValue = Number(value);
+  return Number.isFinite(numberValue) ? numberValue : 0;
+};
 
 const useProductos = ({ enabled = false }: Options = {}) => {
   const [listCuentas, setListCuentas] = useState<cuenta[]>([]);
@@ -17,26 +23,43 @@ const useProductos = ({ enabled = false }: Options = {}) => {
 
     const run = async () => {
       setLoading(true);
-      setError(null);
-      try {
-        const resp = await InfoProductos1.obtieneInfo(); // withCredentials: true
-        const datos = Array.isArray(resp.data) ? resp.data : [];
+        setError(null);
+        try {
+          const resp = await InfoProductos1.obtieneInfo(); // withCredentials: true
+          if (process.env.NODE_ENV === "development") {
+            console.log("Respuesta de productos:", resp.data);
+          }
+          const datos = Array.isArray(resp.data) ? resp.data : [];
 
         const productosLoad: cuenta[] = [];
         for (const p of datos) {
           const tipo: string = p?.tipo ?? "";
           const estado: string = p?.estado ?? "";
-          const aplica = (p?.aplica_seguro ?? "") === "S";
+          const valorSeguro = p?.aplica_seguro;
+          const aplica =
+            valorSeguro === true ||
+            ["S", "TRUE"].includes(String(valorSeguro ?? "").trim().toUpperCase());
+          const tipoSeguro = Number(p?.tipo_seguro ?? 2);
+          const primaSeguro = toNumberOrZero(
+            p?.prima_seguro ?? p?.prima ?? p?.Prima ?? p?.primaSeguro
+          );
+          const sumaAsegurada = toNumberOrZero(
+            p?.suma_asegurada ?? p?.sumaAsegurada ?? p?.SumaAsegurada
+          );
           const modalidad = tipo.split("|").pop()?.trim();
           if ((tipo.substring(0, 3) === "CON" || tipo.substring(0, 3) === "Pen") && estado !== "L") {
-            const monedaP = (p?.moneda ?? "") === "LPS" ? "LEMPIRAS" : "DOLARES";
+            const monedaP = normalizeCurrency(p?.moneda);
             productosLoad.push({
               cuenta: p?.descripcion ?? "",
               tiene_seguro: aplica,
-              prima: p?.prima_seguro ?? 0,
+              tipo_seguro: Number.isFinite(tipoSeguro) ? tipoSeguro : 2,
+              prima: primaSeguro,
+              suma_asegurada: sumaAsegurada,
               forma_pago: p?.forma_pago ?? "",
               moneda: monedaP,
-              aporte: p?.aporte ?? 0,
+              aporte: toNumberOrZero(
+                p?.aporte ?? p?.mon_aporte_ini ?? p?.MON_APORTE_INI
+              ),
               contrato: p?.contrato ?? "",
               modalidad: modalidad ?? "",
             });
@@ -46,7 +69,7 @@ const useProductos = ({ enabled = false }: Options = {}) => {
       } catch (e) {
         if (cancelled) return;
         if (axios.isAxiosError(e) && e.response?.status === 401) {
-          setError("Sesión no válida (401). Intente abrir nuevamente el enlace.");
+          setError("El enlace ya fue utilizado.");
         } else {
           setError("Ocurrió un error al cargar productos.");
         }

@@ -102,4 +102,4 @@ export const planes: Plan[] = [
 "BANHCAFE","Chase Bank","Commerzbank","Banco Liverpool","Banco Santander",
 "Banco Inbursa","Banco STP","Truist Bank","BBVA","Butterfield Bank",
 "CaixaBank","Ceproban","Deutsche Kreditbank","George Bank","Goldman Sachs",
-"PC Financial","Scotiabank","TD Bank"]
+"PC Financial","Scotiabank","TD Bank","Otro"]

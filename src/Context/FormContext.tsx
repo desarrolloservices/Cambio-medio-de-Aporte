@@ -12,6 +12,8 @@ export interface FormData {
   tipoIdentificacion: string;
   numeroIdentificacion: string;
   cardnumber: string;
+  metodoPago: "TARJETA" | "CUENTA_AHORRO";
+  cuentaAhorro: string;
   formaPago: string;
   diaDebito: string;
   expiryDate: string;
@@ -53,6 +55,13 @@ export interface FormContextProps {
   setLoading: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
+/** Último día del mes actual (28-31) como string, para que por defecto no salte el aviso de "ya pasó este mes". */
+const getLastDayOfMonth = (): string => {
+  const d = new Date();
+  const last = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
+  return String(last);
+};
+
 // Crear el Contexto
 const FormContext = createContext({} as FormContextProps);
 
@@ -62,7 +71,7 @@ const FormProvider: React.FC<{ children: React.ReactNode }> = ({
 }) => {
   const [loading, setLoading] = useState(false);
   const [activeStep, setActiveStep] = useState(0);
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<FormData>({
     aporte: "",
     aporte_nuevo:"",
     primerNombre: "",
@@ -72,8 +81,10 @@ const FormProvider: React.FC<{ children: React.ReactNode }> = ({
     tipoIdentificacion: "",
     numeroIdentificacion: "",
     cardnumber: "",
+    metodoPago: "TARJETA" as const,
+    cuentaAhorro: "",
     formaPago: "Carné",
-    diaDebito: "15",
+    diaDebito: getLastDayOfMonth(),
     expiryDate: "", 
     prima: 0,
     cuenta: "",
@@ -169,8 +180,10 @@ export const initialFormData: FormData = {
   tipoIdentificacion: "",
   numeroIdentificacion: "",
   cardnumber: "",
+  metodoPago: "TARJETA",
+  cuentaAhorro: "",
   formaPago: "Carné",
-  diaDebito: "15",
+  diaDebito: getLastDayOfMonth(),
   expiryDate: "",
   prima: 0,
   cuenta: "",

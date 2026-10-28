@@ -14,6 +14,7 @@ import {
   Alert,
 } from "@mui/material";
 import { IMaskInput } from "react-imask";
+import { NumericFormat } from "react-number-format";
 import { useEditDialog } from "../Context/EditDialogContext";
 import UseUpdateCard from "../Hooks/UseUpdateCard";
 import ConfirmDialog from './ConfirmDialog';
@@ -23,6 +24,12 @@ import ExpiryDateMaskedField from "../Components/ExpiryDateMaskedField";
 import { useCardValidator } from "../Hooks/useCardValidator";
 import { useExpiryDateValidator } from "../Hooks/useExpiryDateValidator";
 import { encryptWithPublicKey } from "../Utils/encryptWithPublicKey";
+import {
+  getCurrencyMinimum,
+  getCurrencyMinimumMessage,
+  getCurrencyPrefix,
+  normalizeCurrency,
+} from "../Utils/currency";
 interface EditDialogProps {
   onUpdateSuccess: () => void;
 }
@@ -41,6 +48,38 @@ const TextMaskCustom = React.forwardRef<HTMLInputElement, any>(
           onChange({ target: { name: props.name, value } })
         }
         overwrite
+      />
+    );
+  }
+);
+
+interface CurrencyFormatCustomProps {
+  onChange: (event: { target: { name: string; value: string } }) => void;
+  name: string;
+  prefix?: string;
+}
+
+const CurrencyFormatCustom = React.forwardRef<any, CurrencyFormatCustomProps>(
+  function CurrencyFormatCustom(props, ref) {
+    const { onChange, prefix, ...other } = props;
+    return (
+      <NumericFormat
+        {...other}
+        getInputRef={ref}
+        onValueChange={(values) => {
+          onChange({
+            target: {
+              name: props.name,
+              value: values.value,
+            },
+          });
+        }}
+        valueIsNumericString
+        thousandSeparator=","
+        decimalScale={2}
+        fixedDecimalScale
+        allowNegative={false}
+        prefix={prefix}
       />
     );
   }
@@ -78,9 +117,13 @@ const [montoError, setMontoError] = useState("");
 
   useEffect(() => {
     if (rowData) {
-      setTarjeta(rowData.Tarjeta || "");
+      const tarjetaFila = String(rowData.Tarjeta ?? "");
+
+      setTarjeta(tarjetaFila);
       setMonto(rowData.Monto || "");
-      setMonedaDebito(rowData.MonedaDebito || "");
+      setMonedaDebito(
+        normalizeCurrency(rowData.MonedaDebito, rowData.MonedaCCI)
+      );
       setDiaDebito(rowData.DiaDebito || "");
       setFechaVencimiento(
   rowData.FechaVencimiento
@@ -97,34 +140,38 @@ const [montoError, setMontoError] = useState("");
   const handleSave = () => {
     const [mes, anio] = fechaVencimiento.split("/");
     const montoNumerico = parseFloat(monto);
+    const monedaNormalizada = normalizeCurrency(
+      monedaDebito,
+      rowData?.MonedaCCI
+    );
+    const montoMinimo = getCurrencyMinimum(monedaNormalizada);
 
 if (isNaN(montoNumerico) || montoNumerico < 0) {
   setMontoError("El monto no puede ser negativo o vacío");
   return;
 }
 
-if (
-  (monedaDebito === "LEMPIRAS" && montoNumerico < 250) ||
-  (monedaDebito === "DÓLARES" && montoNumerico < 20)
-) {
-  setMontoError(
-    monedaDebito === "LEMPIRAS"
-      ? "El monto mínimo  es L 250"
-      : "El monto mínimo  es $ 20"
-  );
+if (!monedaNormalizada || montoMinimo === null) {
+  setMontoError("No se pudo determinar la moneda del registro");
+  return;
+}
+
+if (montoNumerico < montoMinimo) {
+  setMontoError(getCurrencyMinimumMessage(monedaNormalizada));
   return;
 }
     const datosActualizados = {
       ...rowData,
       Tarjeta: tarjeta,
       Monto: String(monto),
-      MonedaDebito: monedaDebito,
+      MonedaCCI: normalizeCurrency(rowData?.MonedaCCI, monedaNormalizada),
+      MonedaDebito: monedaNormalizada,
       DiaDebito: diaDebito,
       Aporte:"MENSUAL",
       Vencimiento: `${mes}20${anio}`,
       ID: String(idTC),
       Estado: "A",
-      Canal: "OVP",
+      Canal: "PRUEBAS",
     };
 
 
@@ -153,8 +200,7 @@ if (cardValidationError || expiryValidationError) {
                 Vencimiento: '',
                       EncryptedPayload: encrypted, 
                     }; 
-                    
-                    
+
         await updateCard(cardToSend);
       
         onUpdateSuccess();
@@ -179,6 +225,7 @@ if (cardValidationError || expiryValidationError) {
         <DialogContent>
          <FormControl fullWidth margin="normal">
   <CardNumberMaskedField
+    key={String(rowData?.ID ?? "sin-id")}
     name="cardnumber"
     value={tarjeta}
     onChange={(e) => {
@@ -194,7 +241,7 @@ if (cardValidationError || expiryValidationError) {
   fullWidth
   margin="normal"
   label="Monto"
-  type="number"
+  name="monto"
   value={monto}
   onChange={(e) => {
     setMonto(e.target.value);
@@ -202,6 +249,12 @@ if (cardValidationError || expiryValidationError) {
   }}
   error={!!montoError}
   helperText={montoError}
+  InputProps={{
+    inputComponent: CurrencyFormatCustom as any,
+  }}
+  inputProps={{
+    prefix: getCurrencyPrefix(monedaDebito),
+  }}
 />
 
          
@@ -267,7 +320,6 @@ if (cardValidationError || expiryValidationError) {
       {/* Snackbar para mensaje de éxito */}
       <Snackbar
         open={snackbarOpen}
-        autoHideDuration={3000}
         onClose={() => setSnackbarOpen(false)}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
       >

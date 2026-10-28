@@ -13,12 +13,13 @@ import { LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { FormProvider, FormContext } from "./Context/FormContext";
 import useProductos from "./Hooks/UseProductosCliente";
-import { saveTokenFromUrl } from "./Data/setCookies";
+import { saveTokenFromUrl, getPostLogoutRedirectKey } from "./Data/setCookies";
 import useValidateToken from "./Hooks/UseValidateTk";
 import { ClienteProvider, useClienteContext } from "./Context/ClienteContext";
 import Form1 from "./Components/Form1";
 import { EditDialogProvider } from "./Context/EditDialogContext";
 import Alerta from "./Assets/Alerta.png";
+import SessionExpiredRequest from "./Components/SessionExpiredRequest";
 
 
 const theme = createTheme({
@@ -61,7 +62,7 @@ function App() {
 }
 
 const AppContent: React.FC = () => {
-  const { isValid, isOVP, id, ready } = useValidateToken();
+  const { isValid, isLink, id, ready, sessionExpired } = useValidateToken();
 
   const { setActiveStep, setFormData } = useContext(FormContext);
 
@@ -86,6 +87,16 @@ const AppContent: React.FC = () => {
       }));
     }
   }, [isValid, loading, listCuentas, setFormData]);
+
+  useEffect(() => {
+    if (isValid === false && typeof window !== "undefined") {
+      const key = getPostLogoutRedirectKey();
+      if (sessionStorage.getItem(key)) {
+        sessionStorage.removeItem(key);
+        window.location.href = "https://www.afpatlantida.com";
+      }
+    }
+  }, [isValid]);
 
   if (isValid === null) {
     return (
@@ -117,6 +128,7 @@ const AppContent: React.FC = () => {
         <Typography variant="h6" color="textSecondary">
           Por favor, ingrese nuevamente desde el enlace proporcionado en su correo.
         </Typography>
+        {sessionExpired && <SessionExpiredRequest />}
       </Box>
     );
   }
@@ -157,7 +169,7 @@ const AppContent: React.FC = () => {
               mb={2}
             >
               <Typography variant="h3" color={theme.palette.primary.main}>
-                Modifica tu medio de aporte <br /> de Tarjeta de Credito
+              ¡Impulsa tu patrimonio!
               </Typography>
             </Grid>
 
@@ -167,18 +179,15 @@ const AppContent: React.FC = () => {
 
             <Grid item xs={12} mb={3}>
               <Typography variant="h6" color={theme.palette.secondary.main}>
-                Impulsa tu patrimonio! Actualiza e incrementa tu aporte. Para tu
-                comodidad, puedes establecer debitos automaticos con tu tarjeta de
-                credito o debito.
+              Modifica tu medio de aporte con tarjeta de crédito, débito o cuenta de ahorro de Banco Atlántida.
+               
               </Typography>
               <br />
-              {isOVP && (
-                <Typography variant="h5" color={theme.palette.secondary.main}>
+              {isLink && (
+                <Typography variant="h6" color={theme.palette.secondary.main}>
                   <strong>
-                    Importante: Por tu seguridad, para continuar debes verificar tu
-                    informacion. Este formulario estara disponible durante las
-                    proximas 48 horas.
-                  </strong>
+                  Importante:</strong> Para tu seguridad, debes verificar tu información, este formulario estará disponible 48 horas.
+
                 </Typography>
               )}
             </Grid>
@@ -200,4 +209,3 @@ const AppContent: React.FC = () => {
 };
 
 export default App;
-

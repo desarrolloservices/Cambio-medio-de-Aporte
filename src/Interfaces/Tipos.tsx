@@ -9,12 +9,20 @@ export interface Plan {
 export interface cuenta {
     cuenta: string;
     tiene_seguro: boolean;
+    tipo_seguro: number;
     prima: number;
+    suma_asegurada: number;
     forma_pago: string;
     moneda: string;
     aporte: number;
     contrato:string;
     modalidad:string;
+  }
+
+  export interface CuentaAhorro {
+    cuenta: string;
+    descripcion: string;
+    moneda?: string;
   }
 
  
@@ -35,7 +43,7 @@ export interface cuenta {
     TipoDebito: "TC" | string; // Consider more specific types if possible
     Modalidad: "AFSL1" | string; // Consider more specific types if possible
     MonedaDebito: "LEMPIRAS"| string;
-    Canal: "OVP" | string; 
+    Canal: "Link" | string;
   }
 
   export interface ClienteDataUpdate {
@@ -56,11 +64,11 @@ export interface cuenta {
     Modalidad: "" | string; // Consider more specific types if possible
     Estado:"I";
     MonedaDebito: "LEMPIRAS"| string
-      Canal: "OVP" | string; 
+      Canal: "Link" | string;
 
   }
 
-  
+
 
   export interface informacionCliente {
 Nombre: string;
@@ -89,7 +97,7 @@ Edad: string;
         MonedaDebito:String
 
   }
-  
-  
-  
-  
+
+
+
+
