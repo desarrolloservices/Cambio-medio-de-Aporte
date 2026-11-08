@@ -59,7 +59,6 @@ const SessionExpiredRequest: React.FC = () => {
       const { status, code } = getApiErrorDetails(error);
 
       if (status === 503 && code === "HUBSPOT_TICKET_NOT_CONFIGURED") {
-        console.error("request-form failed", { status, code });
       }
 
       setState("error");

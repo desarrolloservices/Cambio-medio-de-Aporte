@@ -95,6 +95,8 @@ Edad: string;
         Banco:String;
         Monto:String;
         MonedaDebito:String
+         CCI?: string;
+         MonedaCCI?: string;
 
   }
 

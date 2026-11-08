@@ -180,6 +180,7 @@ const showError = (message: string) => {
     prima: cuentaSeleccionada.prima,
     sumaAsegurada: cuentaSeleccionada.suma_asegurada,
   };
+  const esAporteMensual = formData.aporte.trim().toUpperCase() === "MENSUAL";
   const hayNuevoMonto = formData.monto.trim() !== "";
   const aporteParaTotal = hayNuevoMonto
     ? parseMonto(formData.monto)
@@ -192,10 +193,11 @@ const showError = (message: string) => {
         tieneSeguro: cuentaSeleccionada.tiene_seguro,
         tipoSeguro: cuentaSeleccionada.tipo_seguro,
         aporte: hayNuevoMonto ? parseMonto(formData.monto) : cuentaSeleccionada.aporte,
+        tipoAporte: formData.aporte,
         valoresActuales: valoresActualesSeguro,
         moneda: cuentaSeleccionada.moneda,
       });
-  const totalAporte = hayNuevoMonto
+  const totalAporte = hayNuevoMonto && esAporteMensual
     ? aporteParaTotal + valoresSeguro.prima
     : aporteParaTotal;
 
@@ -212,6 +214,7 @@ const showError = (message: string) => {
         tieneSeguro: cuentaSeleccionada.tiene_seguro,
         tipoSeguro: cuentaSeleccionada.tipo_seguro,
         aporte: parseMonto(monto),
+        tipoAporte: prev.aporte,
         valoresActuales: {
           prima: cuentaSeleccionada.prima,
           sumaAsegurada: cuentaSeleccionada.suma_asegurada,
@@ -273,6 +276,7 @@ if (monto < montoMinimo) {
 }
 
   if (
+    esAporteMensual &&
     cuentaSeleccionada.tiene_seguro &&
     cuentaSeleccionada.tipo_seguro === 3 &&
     monto <= cuentaSeleccionada.prima
@@ -285,7 +289,7 @@ if (monto < montoMinimo) {
 
   setMontoError(null); 
     const [mes, anio] = formData.expiryDate.split("/");
-    const montoARegistrar = cuentaSeleccionada.tiene_seguro
+    const montoARegistrar = cuentaSeleccionada.tiene_seguro && esAporteMensual
       ? totalAporte.toFixed(2)
       : formData.monto;
     const cardData: ClienteData = {
@@ -412,6 +416,7 @@ setMontoError(null);
     }
 
     if (
+      esAporteMensual &&
       cuentaSeleccionada.tiene_seguro &&
       cuentaSeleccionada.tipo_seguro === 3 &&
       monto <= cuentaSeleccionada.prima
@@ -424,7 +429,7 @@ setMontoError(null);
 
     setMontoError(null);
 
-    const montoARegistrar = cuentaSeleccionada.tiene_seguro
+    const montoARegistrar = cuentaSeleccionada.tiene_seguro && esAporteMensual
       ? totalAporte.toFixed(2)
       : formData.monto;
 
@@ -485,6 +490,10 @@ const handleVeriffStarted = () => {
       Email: cliente?.Correo ?? "",
       NombreCliente: cliente?.Nombre ?? "",
       Identidad: id||"",
+      tieneSeguro: cuentaSeleccionada.tiene_seguro,
+      tipoSeguro: cuentaSeleccionada.tipo_seguro,
+      primaActual: cuentaSeleccionada.prima,
+      sumaAseguradaActual: cuentaSeleccionada.suma_asegurada,
     });
   };
 
@@ -531,6 +540,7 @@ const handleVeriffStarted = () => {
     cuentaSeleccionada.tipo_seguro,
     cuentaSeleccionada.aporte,
     formData.monto,
+    formData.aporte,
     setFormData,
   ]);
 
@@ -608,11 +618,20 @@ useEffect(() => {
   
   const handleDelete = (row: any) => {
     const monedaCuenta = normalizeCurrency(cuentaSeleccionada.moneda);
+    const tipoConsultado = String(row.TipoDebito ?? "").trim().toUpperCase();
+    const vencimientoConsultado = String(row.FechaVencimiento ?? "").trim();
+    const esCuentaAhorro =
+      tipoConsultado === "CA" ||
+      tipoConsultado === "CUENTA_AHORRO" ||
+      !vencimientoConsultado ||
+      /^0+$/.test(vencimientoConsultado);
 
     const cardData: ClienteDataUpdate = {
       ID: String(row.ID ?? ""),
       Tarjeta: row.Tarjeta,
-      Aporte: formData.aporte || row.TipoDebito,
+      // La consulta devuelve el monto en Aporte y la frecuencia en TipoDebito.
+      // Para actualizar o eliminar, el servicio espera la frecuencia en Aporte.
+      Aporte: row.TipoDebito || "MENSUAL",
       Monto: String(row.Monto),
       Contrato: cuentaSeleccionada.contrato,
       MonedaCCI: monedaCuenta,
@@ -622,8 +641,8 @@ useEffect(() => {
       Email: cliente?.Correo ?? "",
       NombreCliente: cliente?.Nombre ?? "",
       Banco: row.Banco || formData.banco,
-      Vencimiento: row.FechaVencimiento,
-      TipoDebito: "TC",
+      Vencimiento: esCuentaAhorro ? "" : row.FechaVencimiento,
+      TipoDebito: esCuentaAhorro ? "CA" : "TC",
       Modalidad: cuentaSeleccionada.modalidad || "",
       MonedaDebito: monedaCuenta,
       Estado: "I",
@@ -640,18 +659,19 @@ useEffect(() => {
       onConfirm: async () => {
         setShowLoader(true);
         try {
-          const encrypted = await encryptWithPublicKey({
-            Tarjeta: cardData.Tarjeta,
-            Vencimiento: cardData.Vencimiento,
-          });
-          const cardToSend = {
-            ...cardData,
-            Tarjeta: '',
-            Vencimiento: '',
-            EncryptedPayload: encrypted,
-          };
+           const cardToSend = esCuentaAhorro
+             ? cardData
+             : {
+                 ...cardData,
+                 Tarjeta: '',
+                 Vencimiento: '',
+                 EncryptedPayload: await encryptWithPublicKey({
+                   Tarjeta: cardData.Tarjeta,
+                   Vencimiento: cardData.Vencimiento,
+                 }),
+               };
 
-          await deleteCard(cardToSend);
+           await deleteCard(cardToSend);
           setReloadTrigger((prev) => !prev);
           setSnackbarMessage("¡Tarjeta eliminada con éxito!");
           setSnackbarOpen(true);

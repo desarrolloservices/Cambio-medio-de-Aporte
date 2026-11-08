@@ -12,6 +12,7 @@ import {
   OutlinedInput,
   Snackbar,
   Alert,
+  Box,
 } from "@mui/material";
 import { IMaskInput } from "react-imask";
 import { NumericFormat } from "react-number-format";
@@ -23,6 +24,7 @@ import CardNumberMaskedField from "../Components/CardNumberMaskedField";
 import ExpiryDateMaskedField from "../Components/ExpiryDateMaskedField";
 import { useCardValidator } from "../Hooks/useCardValidator";
 import { useExpiryDateValidator } from "../Hooks/useExpiryDateValidator";
+import useCuentasAhorro from "../Hooks/UseCuentasAhorro";
 import { encryptWithPublicKey } from "../Utils/encryptWithPublicKey";
 import {
   getCurrencyMinimum,
@@ -30,6 +32,7 @@ import {
   getCurrencyPrefix,
   normalizeCurrency,
 } from "../Utils/currency";
+import { calculateInsuranceValues } from "../Utils/insurance";
 interface EditDialogProps {
   onUpdateSuccess: () => void;
 }
@@ -88,6 +91,18 @@ const CurrencyFormatCustom = React.forwardRef<any, CurrencyFormatCustomProps>(
 const EditDialog: React.FC<EditDialogProps> = ({ onUpdateSuccess }) => {
   const { open, rowData, closeDialog } = useEditDialog();
   const { updateCard } = UseUpdateCard();
+  const tipoDebitoOriginal = String(rowData?.TipoDebito ?? "").trim().toUpperCase();
+  const vencimientoOriginal = String(rowData?.FechaVencimiento ?? "").trim();
+  const esCuentaAhorro =
+    tipoDebitoOriginal === "CA" ||
+    tipoDebitoOriginal === "CUENTA_AHORRO" ||
+    !vencimientoOriginal ||
+    /^0+$/.test(vencimientoOriginal);
+  const { cuentasAhorro, loadingCuentasAhorro, errorCuentasAhorro } = useCuentasAhorro({
+    cuenta: String(rowData?.CCI ?? ""),
+    monedaCuenta: String(rowData?.MonedaCCI ?? rowData?.MonedaDebito ?? ""),
+    enabled: open && esCuentaAhorro && !!rowData?.CCI,
+  });
 
   const [tarjeta, setTarjeta] = useState("");
   const [monto, setMonto] = useState("");
@@ -104,6 +119,19 @@ const [expiryError, setExpiryError] = useState("");
 const { validateCard } = useCardValidator();
 const { getExpiryError } = useExpiryDateValidator();
 const [montoError, setMontoError] = useState("");
+  const esAporteMensual = Aporte.trim().toUpperCase() === "MENSUAL";
+  const tieneSeguro = Boolean(rowData?.tieneSeguro);
+  const valoresSeguro = calculateInsuranceValues({
+    tieneSeguro,
+    tipoSeguro: Number(rowData?.tipoSeguro ?? 0),
+    aporte: Number(monto.replace(/,/g, "")) || 0,
+    tipoAporte: Aporte,
+    valoresActuales: {
+      prima: Number(rowData?.primaActual ?? 0),
+      sumaAsegurada: Number(rowData?.sumaAseguradaActual ?? 0),
+    },
+    moneda: monedaDebito,
+  });
   const {
     open: confirmOpen,
     loading: confirmLoading,
@@ -131,7 +159,7 @@ const [montoError, setMontoError] = useState("");
     : ""
 );
       setidTC(rowData.ID || "");
-      setAporte(rowData.Aporte||"");
+      setAporte(rowData.TipoDebito || "MENSUAL");
       
       
     }
@@ -167,16 +195,17 @@ if (montoNumerico < montoMinimo) {
       MonedaCCI: normalizeCurrency(rowData?.MonedaCCI, monedaNormalizada),
       MonedaDebito: monedaNormalizada,
       DiaDebito: diaDebito,
-      Aporte:"MENSUAL",
-      Vencimiento: `${mes}20${anio}`,
+      Aporte: Aporte || "MENSUAL",
+      Vencimiento: esCuentaAhorro ? "" : `${mes}20${anio}`,
+      TipoDebito: esCuentaAhorro ? "CA" : "TC",
       ID: String(idTC),
       Estado: "A",
       Canal: "PRUEBAS",
     };
 
 
-const cardValidationError = validateCard(tarjeta).cardNumber;
-const expiryValidationError = getExpiryError(fechaVencimiento);
+const cardValidationError = esCuentaAhorro ? "" : validateCard(tarjeta).cardNumber;
+const expiryValidationError = esCuentaAhorro ? "" : getExpiryError(fechaVencimiento);
 
 if (cardValidationError || expiryValidationError) {
   setCardError(cardValidationError ?? "");
@@ -189,7 +218,10 @@ if (cardValidationError || expiryValidationError) {
       confirmButtonText: "Actualizar",
       confirmColor: "primary",
       onConfirm: async () => {
-        const encrypted = await encryptWithPublicKey({
+        if (esCuentaAhorro) {
+          await updateCard(datosActualizados);
+        } else {
+          const encrypted = await encryptWithPublicKey({
                       Tarjeta: datosActualizados.Tarjeta,
                       Vencimiento: datosActualizados.Vencimiento
                     });
@@ -201,7 +233,8 @@ if (cardValidationError || expiryValidationError) {
                       EncryptedPayload: encrypted, 
                     }; 
 
-        await updateCard(cardToSend);
+          await updateCard(cardToSend);
+        }
       
         onUpdateSuccess();
        
@@ -223,6 +256,26 @@ if (cardValidationError || expiryValidationError) {
   Modificar Aporte
 </DialogTitle>
         <DialogContent>
+         {esCuentaAhorro ? (
+          <FormControl fullWidth margin="normal" disabled={loadingCuentasAhorro}>
+            <InputLabel>Cuenta de ahorro</InputLabel>
+            <Select
+              value={tarjeta}
+              label="Cuenta de ahorro"
+              onChange={(e) => setTarjeta(e.target.value)}
+            >
+              {tarjeta && !cuentasAhorro.some((cuenta) => cuenta.cuenta === tarjeta) && (
+                <MenuItem value={tarjeta}>{tarjeta}</MenuItem>
+              )}
+              {cuentasAhorro.map((cuenta) => (
+                <MenuItem value={cuenta.cuenta} key={cuenta.cuenta}>
+                  {[cuenta.cuenta, cuenta.moneda, cuenta.descripcion].filter(Boolean).join(" - ")}
+                </MenuItem>
+              ))}
+            </Select>
+            {errorCuentasAhorro && <small>{errorCuentasAhorro}</small>}
+          </FormControl>
+         ) : (
          <FormControl fullWidth margin="normal">
   <CardNumberMaskedField
     key={String(rowData?.ID ?? "sin-id")}
@@ -236,6 +289,7 @@ if (cardValidationError || expiryValidationError) {
     helperText={cardError}
   />
 </FormControl>
+         )}
 
           <TextField
   fullWidth
@@ -257,6 +311,29 @@ if (cardValidationError || expiryValidationError) {
   }}
 />
 
+          {tieneSeguro && esAporteMensual && (
+            <Box sx={{ display: "flex", gap: 2, mt: 1 }}>
+              <TextField
+                fullWidth
+                label="Suma asegurada"
+                value={valoresSeguro.sumaAsegurada.toLocaleString("en-US", {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
+                InputProps={{ readOnly: true }}
+              />
+              <TextField
+                fullWidth
+                label="Prima"
+                value={valoresSeguro.prima.toLocaleString("en-US", {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
+                InputProps={{ readOnly: true }}
+              />
+            </Box>
+          )}
+
          
 
           <FormControl fullWidth margin="normal">
@@ -277,7 +354,7 @@ if (cardValidationError || expiryValidationError) {
             </Select>
           </FormControl>
 
-          <FormControl fullWidth margin="normal">
+          {!esCuentaAhorro && <FormControl fullWidth margin="normal">
             
             <ExpiryDateMaskedField
   name="expiryDate"
@@ -289,7 +366,7 @@ if (cardValidationError || expiryValidationError) {
   error={!!expiryError}
   helperText={expiryError}
 />
-          </FormControl>
+          </FormControl>}
 
           <Button onClick={handleSave} variant="contained" color="primary"  fullWidth
             sx={{ mt: 1 }}>

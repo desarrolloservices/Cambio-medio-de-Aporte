@@ -16,7 +16,7 @@ const UseDeleteCard = () => {
         Estado: 'I',
       };
           
-      await InfoActualiza1.UpdateInfo(payload);
+      return await InfoActualiza1.UpdateInfo(payload);
     } catch (err) {
       setError('Error al eliminar la tarjeta');
       throw err;

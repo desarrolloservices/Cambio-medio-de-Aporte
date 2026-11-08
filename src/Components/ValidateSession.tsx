@@ -41,7 +41,6 @@ const VeriffStatusChecker = ({ sessionId, active, onApproved, onRejected }: Prop
         // si está pendiente, seguimos intentando
       } catch (err) {
         // error transitorio -> seguir polling
-        // console.error('validateSession error:', err);
       }
     };
 
