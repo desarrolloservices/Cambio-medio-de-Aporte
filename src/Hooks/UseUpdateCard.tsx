@@ -20,7 +20,7 @@ const UseUpdateCard = () => {
       await InfoActualiza1.UpdateInfo(payload);
     } catch (err) {
       setError('Error al actualizar la tarjeta');
-      console.error(err);
+      throw err;
     } finally {
       setLoading(false);
     }

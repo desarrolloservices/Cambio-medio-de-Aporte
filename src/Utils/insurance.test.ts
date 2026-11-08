@@ -30,6 +30,16 @@ describe("calculateInsuranceValues", () => {
     })).toEqual({ prima: 60, sumaAsegurada: 150000 });
   });
 
+  it("no recalcula el seguro tipo 2 cuando el aporte es único", () => {
+    expect(calculateInsuranceValues({
+      tieneSeguro: true,
+      tipoSeguro: 2,
+      aporte: 500,
+      tipoAporte: "UNICO",
+      valoresActuales,
+    })).toEqual(valoresActuales);
+  });
+
   it("mantiene el tope de seguro en lempiras", () => {
     expect(calculateInsuranceValues({
       tieneSeguro: true,

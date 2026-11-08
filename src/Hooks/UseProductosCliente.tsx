@@ -26,9 +26,6 @@ const useProductos = ({ enabled = false }: Options = {}) => {
         setError(null);
         try {
           const resp = await InfoProductos1.obtieneInfo(); // withCredentials: true
-          if (process.env.NODE_ENV === "development") {
-            console.log("Respuesta de productos:", resp.data);
-          }
           const datos = Array.isArray(resp.data) ? resp.data : [];
 
         const productosLoad: cuenta[] = [];

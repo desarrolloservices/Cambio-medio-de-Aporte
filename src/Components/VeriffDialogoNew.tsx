@@ -87,7 +87,6 @@ const VeriffComponentNew: React.FC<Props> = ({ onSessionCreated, onVeriffStarted
       setIsMounted(true);
       onVeriffStarted();
     } catch (e) {
-      console.error(e);
       setError('No se pudo iniciar la verificación. Intenta de nuevo.');
     } finally {
       setLoading(false);

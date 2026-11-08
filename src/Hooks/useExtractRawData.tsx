@@ -57,6 +57,8 @@ const useExtractRawData = ({ cuenta, trigger, enabled = false, monedaCuenta }: u
                 Banco: item.Emisor,
                 Monto: item.Aporte,
                 MonedaDebito: monedaAsignada,
+                CCI: item.CCI,
+                MonedaCCI: monedaCCIValue,
               });
             }
             return acc;
