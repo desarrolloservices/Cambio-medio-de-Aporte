@@ -2,7 +2,7 @@
   "name": "formadepago",
   "version": "0.1.0",
   "private": true,
-  "homepage": "/formapago",
+  "homepage": "/formapagoPrueba",
   "dependencies": {
     "@babel/runtime": "^7.29.13",
     "@emotion/react": "^11.11.4",

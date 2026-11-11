@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { validateToken1 } from '../Data/GetDatosClientes';
 import { exchangeCodeOnce } from '../Utils/codeExchange';
+import { saveCanalActual } from '../Utils/canal';
 import {
   getApiErrorDetails,
   SESSION_EXPIRED_CODE,
@@ -90,6 +91,7 @@ const useValidateToken = (): TokenValidationResult => {
 
       // 3) Actualiza estado final
       if (v.ok && v.data) {
+        saveCanalActual(v.data.canal);
         setSessionExpired(false);
         setIsValid(true);
         setIsLink(v.data.canal === 'Link' || v.data.canal === '0');
