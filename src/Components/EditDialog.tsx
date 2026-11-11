@@ -33,6 +33,7 @@ import {
   normalizeCurrency,
 } from "../Utils/currency";
 import { calculateInsuranceValues } from "../Utils/insurance";
+import { getCanalActual } from "../Utils/canal";
 interface EditDialogProps {
   onUpdateSuccess: () => void;
 }
@@ -119,12 +120,12 @@ const [expiryError, setExpiryError] = useState("");
 const { validateCard } = useCardValidator();
 const { getExpiryError } = useExpiryDateValidator();
 const [montoError, setMontoError] = useState("");
-  const esAporteMensual = Aporte.trim().toUpperCase() === "MENSUAL";
+  const esAporteMensual = String(Aporte ?? "").trim().toUpperCase() === "MENSUAL";
   const tieneSeguro = Boolean(rowData?.tieneSeguro);
   const valoresSeguro = calculateInsuranceValues({
     tieneSeguro,
     tipoSeguro: Number(rowData?.tipoSeguro ?? 0),
-    aporte: Number(monto.replace(/,/g, "")) || 0,
+    aporte: Number(String(monto ?? "").replace(/,/g, "")) || 0,
     tipoAporte: Aporte,
     valoresActuales: {
       prima: Number(rowData?.primaActual ?? 0),
@@ -200,7 +201,7 @@ if (montoNumerico < montoMinimo) {
       TipoDebito: esCuentaAhorro ? "CA" : "TC",
       ID: String(idTC),
       Estado: "A",
-      Canal: "PRUEBAS",
+      Canal: getCanalActual(),
     };
 
 

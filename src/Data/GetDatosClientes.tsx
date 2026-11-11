@@ -1,6 +1,7 @@
 import axios from "axios";
 import { ClienteData, ClienteDataUpdate } from "../Interfaces/Tipos";
 import Cookies from "js-cookie";
+import { getCanalActual } from "../Utils/canal";
 
 export interface dataVeriff {
   nombre: string;
@@ -227,7 +228,7 @@ export const InfoInsertaVeriff1 = {
 
 export const InfoConsulta1 = {
   InfoConsulta: function (cuenta: string) {
-    const cta = { cuenta, canal: "PRUEBAS" };
+    const cta = { cuenta, canal: getCanalActual() };
    
     return instanceConsulta1.post('', cta, {
       headers: {

@@ -35,6 +35,7 @@ import { InfoInsert1 } from "../Data/GetDatosClientes";
 import UseDeleteCard from "../Hooks/UseDeleteCard";
 import { useEditDialog } from "../Context/EditDialogContext";
 import EditDialog from "./EditDialog";
+import { getCanalActual } from "../Utils/canal";
 import ConfirmDialog from './ConfirmDialog';
 import { useConfirmDialog } from '../Hooks/UseConfirmDialog';
 import { useCardValidator } from "../Hooks/useCardValidator";
@@ -308,7 +309,7 @@ if (monto < montoMinimo) {
       TipoDebito: "TC",
       Modalidad: cuentaSeleccionada.modalidad,
       MonedaDebito: moneda,
-      Canal: "PRUEBAS",
+      Canal: getCanalActual(),
     };
    if (!isExpiryDateValid(formData.expiryDate)) {
   const msg = 'Fecha inválida o vencida';
@@ -449,7 +450,7 @@ setMontoError(null);
       TipoDebito: "CA",
       Modalidad: cuentaSeleccionada.modalidad,
       MonedaDebito: moneda,
-      Canal: "PRUEBAS",
+      Canal: getCanalActual(),
     };
 
     setShowLoader(true);
@@ -646,7 +647,7 @@ useEffect(() => {
       Modalidad: cuentaSeleccionada.modalidad || "",
       MonedaDebito: monedaCuenta,
       Estado: "I",
-      Canal: "PRUEBAS",
+      Canal: getCanalActual(),
 
     };
  
